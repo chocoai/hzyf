@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.HomePageMapper" >
+  <!--目前先改了一些死条件，group by 的条件暂时没改-->
+
+
+  <!-- 注意：这里的收集时间全部是jstime（清算时间）而不是endtime接收时间）,其实都一样的，因为有条件jsqk='1' -->
+  <!-- 暂存点 带有条件jsqk='1'，产生点不带条件-->
+
+
+
+<!--  &lt;!&ndash; 本区域近6个月废物收集情况按月份统计 (其它t表可以不对时间排序的，因为是右连了t2的月份排序表)&ndash;&gt;
+  <select id="listYFZLByMonth" resultType="com.cd.zjyf.pojo.qr.HomePage.MonthZL" >
+    select t1.month,t.count from
+    (
+    select SUBSTR(to_char(endtime, 'yyyy-mm'),6,2) as month, sum(zl) as count
+    from tbl_ylfw_jsdj t
+    left join tbl_ylws_jbxx t1
+    on t.csdid = t1.id
+    left join tbl_jgdw_jbxx t2
+    on t1.jgdwid=t2.id
+    where endtime >
+    add_months(to_date(to_char(trunc(now(),'mm'), 'yyyy-mm'), 'yyyy-mm'), -5)
+    and jsqk = '1'
+    and t2.xzqh like CONCAT(#{userxzqh},'%')
+    <if test="zcdid!=''">
+     and t.zcdid=#{zcdid}
+    </if>
+    group by to_char(endtime, 'yyyy-mm')
+    order by to_char(endtime, 'yyyy-mm') desc
+    ) t
+    right join
+    (
+    select to_char(trunc(now(),'mm')-interval'0'month,'mm') as month,1 as r 
+    union all
+    select to_char(trunc(now(),'mm')-interval'1'month,'mm'),2 
+    union all
+    select to_char(trunc(now(),'mm')-interval'2'month,'mm'),3 
+    union all
+    select to_char(trunc(now(),'mm')-interval'3'month,'mm'),4 
+    union all
+    select to_char(trunc(now(),'mm')-interval'4'month,'mm'),5 
+    union all
+    select to_char(trunc(now(),'mm')-interval'5'month,'mm'),6 
+    )
+    t1
+    on t.month=t1.month
+    order by t1.r
+  </select>-->
+  <!-- 本区域近6个月废物收集情况按月份统计 (其它t表可以不对时间排序的，因为是右连了t2的月份排序表)-->
+  <select id="listYFZLByMonth" resultType="com.cd.zjyf.pojo.qr.HomePage.MonthZL" >
+  select
+  substring(t1. MONTH,6) month,
+  t.count from
+  (
+  select date_format(endtime, '%Y-%m') as month, sum(zl) as count
+  from tbl_ylfw_jsdj t
+  left join tbl_ylws_jbxx t1
+  on t.zcdid = t1.id
+  left join tbl_jgdw_jbxx t2
+  on t1.jgdwid=t2.id
+  where jsqk = '1'
+  and t2.xzqh like CONCAT(#{userxzqh},'%')
+    <if test="zcdid!=''">
+      and t.zcdid=#{zcdid}
+    </if>
+  group by date_format(endtime, '%Y-%m')
+  order by date_format(endtime, '%Y-%m') desc
+  ) t
+  right join
+  (
+  select date_format(DATE_ADD(now(),interval 0 month),'%Y-%m') as month,1 as r 
+  union all
+  select date_format(DATE_ADD(now(),interval -1 month),'%Y-%m'),2 
+  union all
+  select date_format(DATE_ADD(now(),interval -2 month),'%Y-%m'),3 
+  union all
+  select date_format(DATE_ADD(now(),interval -3 month),'%Y-%m'),4 
+  union all
+  select date_format(DATE_ADD(now(),interval -4 month),'%Y-%m'),5 
+  union all
+  select date_format(DATE_ADD(now(),interval -5 month),'%Y-%m'),6 
+  )
+  t1
+  on t.month=t1.month
+  order by t1.r
+  </select>
+
+  <!--根据level不同选择不同的方法-->
+  <sql id="getFunByLevel">
+    <if test="level==1">
+      fun_tocity
+    </if>
+    <if test="level==2">
+      fun_toarea
+    </if>
+  </sql>
+
+
+
+
+
+  <!-- 本区域本日/周/月/年废物收集情况按类型统计(已改) -->
+  <select id="listYFZLByOne" resultType="com.cd.zjyf.pojo.qr.HomePage.LX" >
+    select t1.lxcode,t.count from
+    (
+    select sum(zl) as count, IFNULL(lx,'06') as lxCode
+    from tbl_ylfw_jsdj t
+    left join tbl_ylws_jbxx t1
+    on t.zcdid = t1.id
+    left join tbl_jgdw_jbxx t2
+    on t1.jgdwid=t2.id
+    where jsqk = '1'
+    <include refid="listYFZLByOneTimeType"/>
+    and xzqh like CONCAT(#{userxzqh},'%')
+    <if test="zcdid!=''">
+      and t.zcdid=#{zcdid}
+    </if>
+    group by lx with ROLLUP
+    ) t
+    right join
+    (
+    select '01' as lxcode  
+    union all
+    select '02' as lxcode  
+    union all
+    select '03' as lxcode  
+    union all
+    select '04' as lxcode  
+    union all
+    select '05' as lxcode  
+    union all
+    select '06' as lxcode  
+    )
+    t1
+    on t.lxcode=t1.lxcode
+    order by t1.lxcode
+  </select>
+
+  <!--时间的两边处理方式-->
+<sql id="listYFZLByOneTimeType">
+   and
+    <if test="timeType==1">
+      to_days(endtime) = to_days(now())
+    </if>
+  <if test="timeType==2">
+    YEARWEEK( date_format(  endtime,'%Y-%m-%d' ) ) = YEARWEEK( now() )
+  </if>
+  <if test="timeType==3">
+    DATE_FORMAT( endtime, '%Y%m' ) = DATE_FORMAT( CURDATE() ,'%Y%m' )
+  </if>
+  <if test="timeType==4">
+    YEAR( endtime) = YEAR(NOW())
+  </if>
+</sql>
+
+
+
+
+  <!-- 长期未收集单位列表 -->
+  <!--noChange-->
+  <select id="listDWnocollect" resultType="com.cd.zjyf.pojo.qr.HomePage.DWnocollect" >
+    select fun_csdmc2(csdid) as dwmc,max(jstime) acceptTime from tbl_ylfw_jsdj
+    where csdid in (<include refid="dwIn"/>)
+    group by csdid
+    having
+    DATEDIFF(now(),max(jstime))>${sqlSegment}
+    order by acceptTime
+  </select>
+
+
+  <!--noChange-->
+  <select id="preListDWsjqk" resultType="string" >
+    select yljgtype from tbl_ylws_jbxx where id=#{id}
+  </select>
+
+
+
+
+
+  <!-- 查配置表 -->
+  <!--noChange-->
+  <select id="selectConfig"  resultType="string" >
+    select value from TBL_YLWS_CONFIG where name=#{name}
+  </select>
+
+
+
+  <!--地区年总收集重量（清算时间）（已改）  -->
+  <select id="yearTotalZL" resultType="com.cd.zjyf.pojo.qr.HomePage.YearTotal" >
+    select
+    IFNULL(sum(zl),0.00) as zl,
+    round(IFNULL(sum(zl)/DATEDIFF(NOW(),DATE_SUB(CURDATE(),INTERVAL dayofyear(now()) DAY)),0.00),2) as avgZL,
+    count(*) as cs
+    from tbl_ylfw_jsdj where YEAR(endtime) =YEAR(now())
+    and zcdid in ( <include refid="dwIn"/>)
+  </select>
+
+  <!--16年开始近5年的垃圾收集情况和单位数量(清算时间)（已改）  -->
+  <select id="qst" resultType="com.cd.zjyf.pojo.qr.HomePage.QST" >
+    select * from(
+    select date_format(DATE_ADD(now(),interval 0 year),'%Y') as year
+    union all
+    select date_format(DATE_ADD(now(),interval -1 year),'%Y') as year
+    union all
+    select date_format(DATE_ADD(now(),interval -2 year),'%Y') as year
+    union all
+    select date_format(DATE_ADD(now(),interval -3 year),'%Y') as year
+    union all
+    select date_format(DATE_ADD(now(),interval -4 year),'%Y') as year
+    ) t
+    left join
+    (
+    select year(endtime) year,round(sum(zl)/1000,2) zl,count(distinct(csdid))+count(distinct(zcdid)) jgs from
+    (
+    select * from tbl_ylfw_jsdj where zcdid in (<include refid="dwIn"/>)
+    ) temp
+    group by year(endtime)
+    ) t1
+    on t.year=t1.year
+    where t.year>=2016
+  </select>
+
+  <!-- 实际接收情况(按接收时间降序)（已改）-->
+  <!--收集人 接收人 接收单位 接收时间 -->
+  <!--效率太低了，舍弃-->
+  <!--noChange-->
+  <select id="sjjsqk" resultType="com.cd.zjyf.pojo.qr.HomePage.SJSJQK" >
+    select distinct  (select dwmc  from tbl_ylws_jbxx where id=t.zcdid) zcd,(select dwjc  from tbl_ylws_jbxx where id=t.csdid) csd,jstime,fun_name(tgzid) tgz,fun_name(jsrid) jsr,fun_name(qsrid) qsr  from   tbl_ylfw_jsdj  t where (csdid,jstime) in
+    (
+    select  csdid,MAX(jstime) from tbl_ylfw_jsdj
+    where zcdid in  ( <include refid="dwIn"/>)
+    group by csdid
+
+    )
+    order by jstime desc
+  </select>
+
+
+
+
+  <!--noChange-->
+  <sql id="dwIn">
+    <if test="zcdid!=''">
+        #{zcdid}
+    </if>
+    <if test="zcdid==''">
+    select t.id  from tbl_ylws_jbxx t left join tbl_jgdw_jbxx t1
+    on t.jgdwid= t1.id
+    where t1.xzqh like CONCAT(#{userxzqh},'%')
+      and YYZT='0'
+    </if>
+  </sql>
+
+
+</mapper>

@@ -1,0 +1,44 @@
+FTP_ADDRESS: ...
+FTP_PORT: 21
+FTP_USERNAME: vsftpd
+FTP_PASSWORD: 1
+
+FTP:
+      RYZP_PATH : ryzp/
+      SEWAGE_PATH : sewage/
+      NGINX_SERVER_ADDR : https://dev.zjcdjk.cn/
+
+mybatis:
+    config-location: classpath:mybatis/mybatis-config.xml
+    mapper-locations: classpath:mybatis/mapper/*.xml
+
+server:
+    port: 8005
+    tomcat:
+        uri-encoding: UTF-8
+spring:
+    datasource:
+        username: root
+        password: #h20130902
+        driverClassName: com.mysql.jdbc.Driver
+        url: jdbc:mysql://47.98.139.183/hzyf-test?characterEncoding=utf-8
+    devtools:
+        restart:
+            enabled: false
+    mvc:
+        formcontent:
+            putfilter:
+                enabled: true
+    application:
+        name: hzyf-new
+    redis:
+          host: ...
+          port: 6379
+
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://...:8000/eureka/
+    instance:
+        instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+        prefer-ip-address: true

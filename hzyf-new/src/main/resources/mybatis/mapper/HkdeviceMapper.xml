@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.zjyf.mapper.HkdeviceMapper">
+  <resultMap id="BaseResultMap" type="com.cd.zjyf.bean.Hkdevice">
+    <id column="ID" jdbcType="VARCHAR" property="id" />
+    <result column="YLJGID" jdbcType="VARCHAR" property="yljgid" />
+    <result column="INDEXCODE" jdbcType="VARCHAR" property="indexcode" />
+    <result column="PARENT_UUID" jdbcType="VARCHAR" property="parentUuid" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    ID, YLJGID, INDEXCODE, PARENT_UUID
+  </sql>
+  <select id="selectByExample" parameterType="com.cd.zjyf.bean.HkdeviceExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from TBL_YLWS_HKDEVICE
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from TBL_YLWS_HKDEVICE
+    where ID = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from TBL_YLWS_HKDEVICE
+    where ID = #{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.cd.zjyf.bean.HkdeviceExample">
+    delete from TBL_YLWS_HKDEVICE
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.cd.zjyf.bean.Hkdevice">
+    <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.String">
+      select sys_guid() from dual
+    </selectKey>
+    insert into TBL_YLWS_HKDEVICE (ID, YLJGID, INDEXCODE, 
+      PARENT_UUID)
+    values (#{id,jdbcType=VARCHAR}, #{yljgid,jdbcType=VARCHAR}, #{indexcode,jdbcType=VARCHAR}, 
+      #{parentUuid,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cd.zjyf.bean.Hkdevice">
+    <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.String">
+      select sys_guid() from dual
+    </selectKey>
+    insert into TBL_YLWS_HKDEVICE
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      ID,
+      <if test="yljgid != null">
+        YLJGID,
+      </if>
+      <if test="indexcode != null">
+        INDEXCODE,
+      </if>
+      <if test="parentUuid != null">
+        PARENT_UUID,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      #{id,jdbcType=VARCHAR},
+      <if test="yljgid != null">
+        #{yljgid,jdbcType=VARCHAR},
+      </if>
+      <if test="indexcode != null">
+        #{indexcode,jdbcType=VARCHAR},
+      </if>
+      <if test="parentUuid != null">
+        #{parentUuid,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.cd.zjyf.bean.HkdeviceExample" resultType="java.lang.Long">
+    select count(*) from TBL_YLWS_HKDEVICE
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update TBL_YLWS_HKDEVICE
+    <set>
+      <if test="record.id != null">
+        ID = #{record.id,jdbcType=VARCHAR},
+      </if>
+      <if test="record.yljgid != null">
+        YLJGID = #{record.yljgid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.indexcode != null">
+        INDEXCODE = #{record.indexcode,jdbcType=VARCHAR},
+      </if>
+      <if test="record.parentUuid != null">
+        PARENT_UUID = #{record.parentUuid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update TBL_YLWS_HKDEVICE
+    set ID = #{record.id,jdbcType=VARCHAR},
+      YLJGID = #{record.yljgid,jdbcType=VARCHAR},
+      INDEXCODE = #{record.indexcode,jdbcType=VARCHAR},
+      PARENT_UUID = #{record.parentUuid,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cd.zjyf.bean.Hkdevice">
+    update TBL_YLWS_HKDEVICE
+    <set>
+      <if test="yljgid != null">
+        YLJGID = #{yljgid,jdbcType=VARCHAR},
+      </if>
+      <if test="indexcode != null">
+        INDEXCODE = #{indexcode,jdbcType=VARCHAR},
+      </if>
+      <if test="parentUuid != null">
+        PARENT_UUID = #{parentUuid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cd.zjyf.bean.Hkdevice">
+    update TBL_YLWS_HKDEVICE
+    set YLJGID = #{yljgid,jdbcType=VARCHAR},
+      INDEXCODE = #{indexcode,jdbcType=VARCHAR},
+      PARENT_UUID = #{parentUuid,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

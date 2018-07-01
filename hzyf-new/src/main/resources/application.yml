@@ -1,0 +1,61 @@
+spring:
+    profiles:
+        active: dev
+    jackson:
+#        返回到前端的时间
+        date-format: yyyy-MM-dd
+        time-zone: GMT+8
+    http:
+        multipart:
+            maxFileSize: 10Mb
+            maxRequestSize: 100Mb
+# 如果使用自定义解析器bean的话，必须把这个设为false
+#            enabled: false
+
+
+#百度api根据地理位置名称获取坐标
+BAIDU_API:
+  #根据物理地址获取地理坐标
+  COORDINATE_URL: http://api.map.baidu.com/geocoder/v2/
+  #坐标转换
+  ZBZH_URL: http://api.map.baidu.com/geoconv/v1/
+  AK: D60KcUO245tG5eUXTFqoPKUec0t7kGmU
+
+#海康威视车辆地位API
+CAR_LOCATION:
+    HIK:
+      USERNAME: tjgps110
+      PASSWORD: 2f3de7a6fcf9ac3ba9e1a1bd4fbaa515
+      ROUTE: 1
+      #删除定位超过的时间
+    PLAYBACK:
+      DAY: 7
+
+
+ReidsCache:
+    #缓存开启，默认为false
+    enable: true
+    #缓存时间(单位是秒)
+    time: 30
+
+logging:
+#    file: zjyl-web.log
+    level:
+        com:
+            cd:
+                zjyf: DEBUG
+                zjyf.mapper.CarlocationMapper.insertSelective: false
+                zjyf.mapper.CarlocationMapper.insertSelective!selectKey: false
+
+
+    config: classpath:log4j2.xml
+
+
+
+
+test:
+    cache: true
+
+HEADFRAME: PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KCjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgPG1ldGEgaHR0cC1lcXVpdj0iWC1VQS1Db21wYXRpYmxlIiBjb250ZW50PSJJRT1lZGdlIj4KICA8bWV0YSBuYW1lPSJkZXNjcmlwdGlvbiIgY29udGVudD0i5rmW5bee5biC5Yy755aX5bqf54mp5Zyo57q/566h55CG5L+h5oGv57O757ufIj4KICA8dGl0bGU+5rmW5bee5biC5Yy755aX5bqf54mp5Zyo57q/566h55CG5L+h5oGv57O757ufPC90aXRsZT4KICA8c2NyaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYXBpLm1hcC5iYWlkdS5jb20vYXBpP3Y9Mi4wJmFrPThqR2tFbzFSd0dsZlFxR0RlOFc4YzNHY3pBWXhHOWlFIj48L3NjcmlwdD4KICA8c2NyaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYXBpLm1hcC5iYWlkdS5jb20vbGlicmFyeS9MdVNodS8xLjIvc3JjL0x1U2h1X21pbi5qcyI+PC9zY3JpcHQ+CiAgPHNjcmlwdCBsYW5ndWFnZT0iamF2YXNjcmlwdCI+CiAgwqB2YXLCoHNjcm9sbEZ1bmM9ZnVuY3Rpb24oZSl7wqAKICDCoMKgZT1lwqB8fMKgd2luZG93LmV2ZW50O8KgCiAgwqDCoGlmKGUud2hlZWxEZWx0YcKgJibCoGV2ZW50LmN0cmxLZXkpey8vSUUvT3BlcmEvQ2hyb21lwqAKICDCoMKgwqBldmVudC5yZXR1cm5WYWx1ZT1mYWxzZTsKICDCoMKgfWVsc2XCoGlmKGUuZGV0YWlsKXsvL0ZpcmVmb3jCoAogIMKgwqDCoGV2ZW50LnJldHVyblZhbHVlPWZhbHNlO8KgCiAgwqDCoH3CoAogIMKgfcKgwqAKICDCoAogIMKgLyrms6jlhozkuovku7YqL8KgCiAgwqBpZihkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKXvCoAogIMKgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NTW91c2VTY3JvbGwnLHNjcm9sbEZ1bmMsZmFsc2UpO8KgCiAgwqB9Ly9XM0PCoAogIMKgd2luZG93Lm9ubW91c2V3aGVlbD1kb2N1bWVudC5vbm1vdXNld2hlZWw9c2Nyb2xsRnVuYzsvL0lFL09wZXJhL0Nocm9tZS9TYWZhcmnCoAogIMKgwqAKICA8L3NjcmlwdD4KICA8c2NyaXB0IGxhbmd1YWdlPSJqYXZhc2NyaXB0IiBmb3I9InNwdiIgZXZlbnQ9Ik1QVl9GaXJlV25kU2VsZWN0ZWQobFduZElkLCBjYW1lcmFVdWlkKSI+CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgidXVpZCIpLnZhbHVlPWNhbWVyYVV1aWQ7CiAgICB2YXIgZGVzYyA9ICLnqpflj6Pluo/lj7c6IiArIGxXbmRJZDsKICA8L3NjcmlwdD4KICA8c2NyaXB0IGxhbmd1YWdlPSJqYXZhc2NyaXB0IiBmb3I9InNwdiIgZXZlbnQ9Ik1QVl9GaXJlUHJldmlld1Jlc3VsdChsV25kSWQsIGxQcmV2aWV3UmVzdWx0KSI+CiAgICBzek1zZyA9ICLpooTop4jnu5PmnpzvvJrnqpflj6MiICsgbFduZElkOwogICAgaWYgKDEgPT0gbFByZXZpZXdSZXN1bHQpCiAgICB7CiAgICAgIHN6TXNnICs9ICLlvIDlp4vpooTop4giOwogICAgfQogICAgZWxzZSBpZigyID09IGxQcmV2aWV3UmVzdWx0KQogICAgewogICAgICBzek1zZyArPSAi5YGc5q2i6aKE6KeIIjsKICAgIH0KICAgIGVsc2UgaWYoMyA9PSBsUHJldmlld1Jlc3VsdCkKICAgIHsKICAgICAgc3pNc2cgKz0gIumihOiniOWksei0pSI7CiAgICB9CiAgPC9zY3JpcHQ+CiAgPHNjcmlwdCBsYW5ndWFnZT0iamF2YXNjcmlwdCIgZm9yPSJzcHYiIGV2ZW50PSJNUFZfRmlyZVNuYXBTaG90KGxXbmRJZCxscFBpY05hbWUsbHBDYW1lcmFVVUlELGxQaWNSZXN1bHQpIj4KICAgIHN6TXNnID0gIueql+WPoyIgKyBsV25kSWQ7CiAgICBpZigxID09IGxQaWNSZXN1bHQpCiAgICB7CiAgICAgIHN6TXNnICs9ICgiIC0g5oqT5Zu+5oiQ5Yqf77yaIiArIGxwUGljTmFtZSk7CiAgICB9CiAgICBlbHNlCiAgICB7CiAgICAgIHN6TXNnICs9ICIgLSDmipPlm77lpLHotKUiOwogICAgfQogIDwvc2NyaXB0PgogIDxzY3JpcHQgbGFuZ3VhZ2U9ImphdmFzY3JpcHQiIGZvcj0ic3B2IiBldmVudD0iTVBWX0ZpcmVGdWxsU2NyZWVuKGxGdWxsU2NyZWVuKSI+CiAgICBpZiAoMSA9PSBsRnVsbFNjcmVlbikKICAgIHsKICAgIH0KICAgIGVsc2UKICAgIHsKICAgIH0KICA8L3NjcmlwdD4KPGxpbmsgaHJlZj0iL2luZGV4LmNzcyIgcmVsPSJzdHlsZXNoZWV0Ij48L2hlYWQ+Cgo8Ym9keT4KPGRpdiBpZD0icm9vdCI+PC9kaXY+CjxzY3JpcHQgdHlwZT0idGV4dC9qYXZhc2NyaXB0IiBzcmM9Ii9pbmRleC5qcyI+PC9zY3JpcHQ+PC9ib2R5PgoKPC9odG1sPgo=
+
+

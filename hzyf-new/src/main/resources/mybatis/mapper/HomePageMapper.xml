@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.HomePageMapper" >
+  <!--目前先改了一些死条件，group by 的条件暂时没改-->
+
+
+  <!-- 注意：这里的收集时间全部是jstime（清算时间）而不是endtime接收时间）,其实都一样的，因为有条件jsqk='1' -->
+  <!-- 暂存点 带有条件jsqk='1'，产生点不带条件-->
+
+
+  <!-- 单位分布统计（过期） -->
+<!--
+<select id="listDWByRegion" resultType="com.cd.zjyf.pojo.qr.HomePage.DWcount" >
+    select code as userxzqh,name as regionName,nvl(count,0) as count
+    from (select ${sqlFun} as userxzqh, count(*) as count
+    from tbl_ylws_jbxx
+    where dwdzbm like #{userxzqh}||'%'
+    group by ${sqlFun}) t
+    right join tbl_areainfo t1
+    on t.userxzqh = t1.code
+    where code like #{userxzqh}||'_%'
+    and code= ${sqlFun2}
+  </select>
+  -->
+
+
+
+
+  <!-- 本区域近6个月废物收集情况按月份统计 (其它t表可以不对时间排序的，因为是右连了t2的月份排序表)-->
+  <select id="listYFZLByMonth" resultType="com.cd.zjyf.pojo.qr.HomePage.MonthZL" >
+    select t1.month,t.count from
+    (
+    select SUBSTR(to_char(endtime, 'yyyy-mm'),6,2) as month, sum(zl) as count
+    from tbl_ylfw_jsdj t
+    left join tbl_ylws_jbxx t1
+    on t.zcdid = t1.id
+    left join tbl_jgdw_jbxx t2
+    on t1.jgdwid=t2.id
+    where endtime >
+    add_months(to_date(to_char(trunc(sysdate,'mm'), 'yyyy-mm'), 'yyyy-mm'), -5)
+    and jsqk = '1'
+    and t2.xzqh like #{userxzqh}||'%'
+    <if test="zcdid!=''">
+      and t.zcdid=#{zcdid}
+    </if>
+    group by to_char(endtime, 'yyyy-mm')
+    order by to_char(endtime, 'yyyy-mm') desc
+    ) t
+    right join
+    (
+    select to_char(trunc(sysdate,'mm')-interval'0'month,'mm') as month,1 as r from dual
+    union all
+    select to_char(trunc(sysdate,'mm')-interval'1'month,'mm'),2 from dual
+    union all
+    select to_char(trunc(sysdate,'mm')-interval'2'month,'mm'),3 from dual
+    union all
+    select to_char(trunc(sysdate,'mm')-interval'3'month,'mm'),4 from dual
+    union all
+    select to_char(trunc(sysdate,'mm')-interval'4'month,'mm'),5 from dual
+    union all
+    select to_char(trunc(sysdate,'mm')-interval'5'month,'mm'),6 from dual
+    )
+    t1
+    on t.month=t1.month
+    order by t1.r
+  </select>
+
+  <!-- 辖区本月废物收集情况按地区统计
+  <select id="listYFZLByOneMonth" resultType="com.cd.zjyf.pojo.qr.HomePage.OneMonthSJ" >
+  select csCount,zlCount,userxzqh,name as regionName
+    from (
+    select  count(*)as csCount,sum(zlCount) as zlCount,userxzqh from (
+  select  sum(zl)as zlCount,dwdzbm as userxzqh
+    from tbl_ylfw_jsdj t
+    left join tbl_ylws_jbxx t1
+      on t.csdid = t1.id
+      where  jsqk = '1'
+      and jstime>add_months(to_date(to_char(sysdate, 'yyyy-mm'), 'yyyy-mm'),0)
+      and dwdzbm like #{userxzqh}||'%'
+      group by dwdzbm,jstime
+        ) group by userxzqh
+      ) t
+    left join tbl_areainfo t1
+      on t.userxzqh = t1.code
+  </select>-->
+  <!--根据level不同选择不同的方法-->
+  <sql id="getFunByLevel">
+    <if test="level==1">
+      fun_tocity
+    </if>
+    <if test="level==2">
+      fun_toarea
+    </if>
+  </sql>
+
+  <!-- 辖区本月废物收集情况按地区统计(已改) -->
+  <select id="listYFZLByOneMonth" resultType="com.cd.zjyf.pojo.qr.HomePage.OneMonthSJ" >
+    select nvl(csCount,0) csCount,nvl(zlCount,0) zlCount,code as userxzqh,name as regionName
+    from (
+    select  count(*)as csCount,sum(zlCount) as zlCount,<include refid="getFunByLevel"/>(xzqh) as userxzqh from (
+    select  sum(zl)as zlCount,xzqh
+    from tbl_ylfw_jsdj t
+    left join tbl_ylws_jbxx t1
+    on t.csdid = t1.id
+    left join tbl_jgdw_jbxx t2
+    on t1.jgdwid=t2.id
+    where  jsqk = '1'
+    and endtime>add_months(trunc(sysdate, 'mm'),0)
+    and xzqh like #{userxzqh}||'%'
+    group by xzqh,endtime
+    ) group by <include refid="getFunByLevel"/>(xzqh)
+    ) t
+    right join tbl_areainfo t1
+    on t.userxzqh = t1.code
+    where code like #{userxzqh}||'_%'
+    and code= <include refid="getFunByLevel"/>(code)
+  </select>
+
+
+
+  <!-- 本区域本月废物收集情况按类型统计
+  <select id="listYFZLByOne" resultType="com.cd.zjyf.pojo.qr.HomePage.LX" >
+  select sum(zl) as count, lx as lxCode
+    from tbl_ylfw_jsdj t
+     left join tbl_ylws_jbxx t1
+      on t.csdid = t1.id
+      where  jsqk = '1'
+       and jstime>add_months(to_date(to_char(sysdate, 'yyyy-mm'), 'yyyy-mm'),0)
+      and dwdzbm like #{userxzqh}||'%'
+      group by rollup (lx)
+  </select>
+  -->
+
+  <!-- 本区域本月废物收集情况按类型统计(已改) -->
+  <select id="listYFZLByOne" resultType="com.cd.zjyf.pojo.qr.HomePage.LX" >
+    select t1.lxcode,t.count from
+    (
+    select sum(zl) as count, nvl(lx,'06') as lxCode
+    from tbl_ylfw_jsdj t
+    left join tbl_ylws_jbxx t1
+    on t.zcdid = t1.id
+    left join tbl_jgdw_jbxx t2
+    on t1.jgdwid=t2.id
+    where jsqk = '1'
+    and endtime >=
+    <include refid="listYFZLByOneTimeType"/>
+    and xzqh like #{userxzqh}||'%'
+    <if test="zcdid!=''">
+      and t.zcdid=#{zcdid}
+    </if>
+    group by rollup(lx)
+    ) t
+    right join
+    (
+    select '01' as lxcode  from dual
+    union all
+    select '02' as lxcode  from dual
+    union all
+    select '03' as lxcode  from dual
+    union all
+    select '04' as lxcode  from dual
+    union all
+    select '05' as lxcode  from dual
+    union all
+    select '06' as lxcode  from dual
+    )
+    t1
+    on t.lxcode=t1.lxcode
+    order by t1.lxcode
+  </select>
+<sql id="listYFZLByOneTimeType">
+    <if test="timeType==1">
+      trunc(sysdate, 'dd')
+    </if>
+  <if test="timeType==2">
+    trunc(sysdate, 'd') + 1
+  </if>
+  <if test="timeType==3">
+    trunc(sysdate, 'mm')
+  </if>
+  <if test="timeType==4">
+    trunc(sysdate, 'yyyy')
+  </if>
+</sql>
+
+
+  <!-- 在线收集人员人数和地区分布统计
+  <select id="listZXSJByRegion" resultType="com.cd.zjyf.pojo.qr.HomePage.OLSJ" >
+  select count,userxzqh,name as regionName
+    from (
+  select  count(*) as count, ${sqlFun} as userxzqh
+    from tbl_app_user t
+    left join tbl_ylws_jbxx t1
+      on t.yljgid = t1.id
+      where  ZGZT='1'
+      and rylx='2'
+      and dwdzbm like #{userxzqh}||'%'
+      group by ${sqlFun}
+      )
+      t
+    left join tbl_areainfo t1
+      on t.userxzqh = t1.code
+  </select>
+  -->
+  <!-- 在线收集人员人数和地区分布统计（过期）-->
+  <select id="listZXSJByRegion" resultType="com.cd.zjyf.pojo.qr.HomePage.OLSJ" >
+    select count,code as userxzqh,name as regionName
+    from (
+    select  count(*) as count, ${sqlFun} as userxzqh
+    from tbl_app_user t
+    left join tbl_ylws_jbxx t1
+    on t.yljgid = t1.id
+    where  ZGZT='1'
+    and rylx='2'
+    and dwdzbm like #{userxzqh}||'%'
+    group by ${sqlFun}
+    )
+    t
+    right join tbl_areainfo t1
+    on t.userxzqh = t1.code
+    where code like #{userxzqh}||'_%'
+    and code= ${sqlFun2}
+  </select>
+
+  <!--地理信息获取（已改） -->
+  <select id="listDLXX" resultType="com.cd.zjyf.pojo.qr.HomePage.DLXX" >
+    select * from
+    (
+
+    select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+    (
+    select '2' as zdType, csdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,csdid) in
+    (
+    select max(jstime) lastTime,csdid from tbl_ylfw_jsdj
+    where zcdid in (<include refid="dwIn"/>)
+    group by csdid
+    )
+    ) t
+    left join tbl_ylws_jbxx t1 on t.id =t1.id
+    left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+    union all
+
+    select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+    (
+    select '1' as zdType, zcdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,zcdid) in
+    (
+    select max(jstime) lastTime,zcdid from tbl_ylfw_jsdj
+    where zcdid in (<include refid="dwIn"/>) and jsqk='1'
+    group by zcdid
+    )
+    ) t
+    left join tbl_ylws_jbxx t1 on t.id =t1.id
+    left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+    union all
+
+    select t1.xm as dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+    (
+    select '3' as zdType, jsrid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,jsrid) in
+    (
+    select max(jstime) lastTime,jsrid from tbl_ylfw_jsdj
+    where jsrid in (
+    select t.id from tbl_app_user t
+    left join tbl_ylws_jbxx t1
+    on t.yljgid = t1.id
+    left join tbl_jgdw_jbxx t2
+    on t1.jgdwid=t2.id
+    where  ZGZT='1'
+    and rylx='2'
+    and xzqh like #{userxzqh}||'%'
+    )
+    group by jsrid
+    )
+    ) t
+    left join tbl_app_user t1 on t.id =t1.id
+    left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+    ) where zdType in
+    <foreach collection="zdTypes" item="zdType" index="index"
+             open="(" close=")" separator=",">
+      #{zdType}
+    </foreach>
+
+  </select>
+
+  <!-- 单位列表信息获取
+  <select id="listDWinfo" resultType="com.cd.zjyf.pojo.qr.HomePage.DWDL" >
+  select t.id,t.dwmc,t1.LONGITUDE,t1.LATITUDE from tbl_ylws_jbxx t left join tbl_ylws_dlxx t1 on t.id =t1.fkid
+  where dwdzbm like #{userxzqh}||'%'
+  </select>
+  -->
+  <!-- 单位列表信息获取（已改）-->
+  <select id="listDWinfo" resultType="com.cd.zjyf.pojo.qr.HomePage.DLXX" >
+    select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+    (
+    select '2' as zdType, csdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,csdid) in
+    (
+    select max(jstime) lastTime,csdid from tbl_ylfw_jsdj
+    where zcdid in (<include refid="dwIn"/>)
+    group by csdid
+    )
+    ) t
+    left join tbl_ylws_jbxx t1 on t.id =t1.id
+    left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+    union all
+
+    select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+    (
+    select '1' as zdType, zcdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,zcdid) in
+    (
+    select max(jstime) lastTime,zcdid from tbl_ylfw_jsdj
+    where zcdid in (<include refid="dwIn"/>) and jsqk='1'
+    group by zcdid
+    )
+    ) t
+    left join tbl_ylws_jbxx t1 on t.id =t1.id
+    left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+  </select>
+
+  <!-- 长期未收集单位列表 -->
+  <select id="listDWnocollect" resultType="com.cd.zjyf.pojo.qr.HomePage.DWnocollect" >
+    select fun_csdmc2(csdid) as dwmc,max(jstime) acceptTime from tbl_ylfw_jsdj
+    where csdid in (<include refid="dwIn"/>)
+    group by csdid
+    having
+    sysdate-max(jstime)>${sqlSegment}
+    order by acceptTime
+  </select>
+
+  <!-- 医废视频监控查看 -->
+<!--  <select id="lookSP" resultType="com.cd.zjyf.pojo.qr.HomePage.DWcount" >
+  </select>-->
+
+
+  <select id="preListDWsjqk" resultType="string" >
+    select yljgtype from tbl_ylws_jbxx where id=#{id}
+  </select>
+  <!-- 具体单位收集情况
+  <select id="listDWsjqk" resultType="com.cd.zjyf.pojo.qr.HomePage.SJQK" >
+  select * from
+  (select sum(zl) countZl,sum(sl) countSl,max(jstime) acceptTime from tbl_ylfw_jsdj where jsqk='1' and ${sqlSegment} =#{id}) t ,
+  (select sum(zl) ssxZl,sum(sl) ssxSl from tbl_ylfw_jsdj where lx='01' and jsqk='1' and ${sqlSegment} =#{id}) t1 ,
+  (select sum(zl) grxZl,sum(sl) grxSl from tbl_ylfw_jsdj where lx='02' and jsqk='1' and ${sqlSegment} =#{id}) t2,
+  (select sum(zl) blxZl,sum(sl) blxSl from tbl_ylfw_jsdj where lx='03' and jsqk='1' and ${sqlSegment} =#{id}) t3,
+  (select sum(zl) ywxZl,sum(sl) ywxSl from tbl_ylfw_jsdj where lx='04' and jsqk='1' and ${sqlSegment} =#{id}) t4,
+  (select sum(zl) hxxZl,sum(sl) hxxSl from tbl_ylfw_jsdj where lx='05' and jsqk='1' and ${sqlSegment} =#{id}) t5
+  </select>
+  -->
+  <!-- 具体单位收集情况（过期） -->
+  <select id="listDWsjqk" resultType="com.cd.zjyf.pojo.qr.HomePage.SJQK" >
+    select * from
+    (select id,zl countZl,sl countSl,jstime acceptTime from tbl_ylfw_jsdj where  ${sqlSegment} =#{id}  ${sqlSegment1}) t
+    left join
+    (select id,zl ssxZl,sl ssxSl from tbl_ylfw_jsdj where lx='01'  ${sqlSegment1} and ${sqlSegment} =#{id}) t1
+    on t.id= t1.id
+    left join
+    (select id,zl grxZl,sl grxSl from tbl_ylfw_jsdj where lx='02'  ${sqlSegment1} and ${sqlSegment} =#{id}) t2
+    on t.id= t2.id
+    left join
+    (select id,zl blxZl,sl blxSl from tbl_ylfw_jsdj where lx='03'  ${sqlSegment1} and ${sqlSegment} =#{id}) t3
+    on t.id= t3.id
+    left join
+    (select id,zl ywxZl,sl ywxSl from tbl_ylfw_jsdj where lx='04'  ${sqlSegment1} and ${sqlSegment} =#{id}) t4
+    on t.id= t4.id
+    left join
+    (select id,zl hxxZl,sl hxxSl from tbl_ylfw_jsdj where lx='05'  ${sqlSegment1} and ${sqlSegment} =#{id}) t5
+    on t.id= t5.id
+    order by accepttime desc
+  </select>
+
+  <!-- 具体单位收集情况2 -->
+  <!--接收时间 是否清算 类别 重量 交接人 收集人 运输人  -->
+  <select id="listDWsjqk2" resultType="com.cd.zjyf.pojo.qr.HomePage.SJQK2" >
+    select jstime,jsqk,lx,zl,fun_name(tgzid) tgz,fun_name(jsrid) jsr,fun_name(qsrid) qsr from tbl_ylfw_jsdj
+    where  ${sqlSegment} =#{id}
+    order by jsqk,jstime desc
+  </select>
+
+
+  <!-- 查配置表 -->
+  <select id="selectConfig"  resultType="string" >
+    select value from TBL_YLWS_CONFIG where name=#{name}
+  </select>
+
+  <!-- 地区下拉 -->
+  <select id="areaDropdown" resultType="com.cd.zjyf.pojo.qr.HomePage.AreaDropdown" >
+    select * from tbl_areainfo
+    where code in
+    (
+    select ${sqlFun2}  from tbl_areainfo
+    where ${sqlFun2} like #{userxzqh}||'%'
+    group by ${sqlFun2}
+    )
+  </select>
+
+  <!--地区年总收集重量（清算时间）（已改）  -->
+  <select id="yearTotalZL" resultType="com.cd.zjyf.pojo.qr.HomePage.YearTotal" >
+    select nvl(TO_CHAR(sum(zl),'fm9999999990.00'),0.00) as zl,nvl(TO_CHAR(sum(zl)/(trunc(sysdate)-trunc(sysdate, 'yyyy')+1),'fm9999999990.00'),0.00) as avgZL,count(*) as cs from tbl_ylfw_jsdj where endtime >=trunc(sysdate,'yyyy')
+    and zcdid in ( <include refid="dwIn"/>)
+  </select>
+
+  <!--16年开始近5年的垃圾收集情况和单位数量(清算时间)（已改）  -->
+  <select id="qst" resultType="com.cd.zjyf.pojo.qr.HomePage.QST" >
+    select * from(
+    select to_char(sysdate-interval'0'year,'yyyy') as year,trunc(sysdate-interval'0'year,'yyyy') tr from dual
+    union all
+    select to_char(sysdate-interval'1'year,'yyyy'),trunc(sysdate-interval'1'year,'yyyy') from dual
+    union all
+    select to_char(sysdate-interval'2'year,'yyyy'),trunc(sysdate-interval'2'year,'yyyy') from dual
+    union all
+    select to_char(sysdate-interval'3'year,'yyyy'),trunc(sysdate-interval'3'year,'yyyy') from dual
+    union all
+    select to_char(sysdate-interval'4'year,'yyyy'),trunc(sysdate-interval'4'year,'yyyy') from dual
+    ) t
+    left join
+    (
+    select trunc(endtime,'yyyy') tr,round(sum(zl)/1000,2) zl,count(distinct(csdid))+count(distinct(zcdid)) jgs from
+    (
+    select * from tbl_ylfw_jsdj where zcdid in (<include refid="dwIn"/>)
+    )
+    group by trunc(endtime,'yyyy')
+    ) t1
+    on t.tr=t1.tr
+    where year>=2016
+  </select>
+
+  <!-- 实际接收情况(按接收时间降序)（已改）-->
+  <!--收集人 接收人 接收单位 接收时间 -->
+  <!--效率太低了，舍弃-->
+  <!--<select id="sjjsqk" resultType="com.cd.zjyf.pojo.qr.HomePage.SJSJQK" >
+   select * from
+    (
+    select  fun_name(jsrid) jsr,fun_name(tgzid) tgz,fun_csdmc2(csdid) csd,jstime,row_number() over(partition by csdid order by jstime desc) r  from tbl_ylfw_jsdj
+      where csdid in (select id  from tbl_ylws_jbxx  where dwdzbm like #{userxzqh}||'%')
+     )
+     where r=1 order by jstime desc
+  </select>-->
+  <select id="sjjsqk" resultType="com.cd.zjyf.pojo.qr.HomePage.SJSJQK" >
+    select distinct  (select dwmc  from tbl_ylws_jbxx where id=t.zcdid) zcd,(select dwjc  from tbl_ylws_jbxx where id=t.csdid) csd,jstime,fun_name(tgzid) tgz,fun_name(jsrid) jsr,fun_name(qsrid) qsr  from   tbl_ylfw_jsdj  t where (csdid,jstime) in
+    (
+    select  csdid,MAX(jstime) from tbl_ylfw_jsdj
+    where zcdid in  ( <include refid="dwIn"/>)
+    group by csdid
+
+    )
+    order by jstime desc
+  </select>
+
+
+
+  <!--产生点列表（已改） -->
+  <select id="csdList" resultType="com.cd.zjyf.pojo.qr.HomePage.CSDlist" >
+    select * from tbl_ylws_jbxx t
+    left join tbl_jgdw_jbxx t2 on t.jgdwid=t2.id
+    left join tbl_areainfo t1 on fun_toarea(t2.xzqh)=t1.code
+    where
+    yljgtype!='1'
+    and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like #{userxzqh}||'%' )
+  </select>
+
+  <!--暂存点列表（已改） -->
+  <!--
+   <select id="zcdList" resultType="com.cd.zjyf.pojo.qr.HomePage.ZCDlist" >
+  select * from tbl_ylws_jbxx t left join
+  (
+  select zcdid,sum(zl) zl from tbl_ylfw_jsdj where jsqk!='1'
+  and zcdid in (
+  select id from tbl_ylws_jbxx  where DWDZBM like #{userxzqh}||'%' and yljgtype='1'
+  )
+  group by  zcdid
+  ) t1
+  on t.id =t1.zcdid
+  left join tbl_areainfo t2
+  on fun_toarea(t.dwdzbm)=t2.code
+  where yljgtype='1'
+  </select>
+  -->
+  <select id="zcdList" resultType="com.cd.zjyf.pojo.qr.HomePage.ZCDlist" >
+    select * from tbl_ylws_jbxx t left join
+    (
+    select zcdid,sum(zl) zl from tbl_ylfw_jsdj where jsqk!='1'
+    group by  zcdid
+    ) t1
+    on t.id =t1.zcdid
+    left join tbl_jgdw_jbxx t2
+    on t.jgdwid=t2.id
+    left join tbl_areainfo t3
+    on fun_toarea(t2.xzqh)=t3.code
+    where yljgtype='1'
+    and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like #{userxzqh}||'%' )
+  </select>
+
+
+  <!-- 车辆定位（临时方法，以后要对接，地区参数暂时无视） -->
+  <select id="carLocation" resultType="com.cd.zjyf.pojo.qr.HomePage.CarLocation" >
+    select * from tbl_app_user t
+    left join tbl_ylws_dlxx t1
+    on t.id =t1.fkid
+    where rylx='3'
+  </select>
+
+  <!--今年收集各地区重量（已改）  -->
+  <select id="areaZL" resultType="com.cd.zjyf.pojo.qr.HomePage.AreaZL" >
+    select * from
+    (
+    select * from tbl_areainfo
+    where code like #{userxzqh}||'_%'
+    and code=fun_toarea(code)
+    )t
+    left join
+    (
+    select fun_toarea(xzqh) xzqh,sum(zl) zl from tbl_ylfw_jsdj t
+    left join tbl_ylws_jbxx t1
+    on t.csdid=t1.id
+    left join tbl_jgdw_jbxx t2
+    on t1.jgdwid=t2.id
+    where endtime >=trunc(sysdate,'yyyy')
+    and t2.xzqh like #{userxzqh}||'%'
+    group by fun_toarea(xzqh)
+    ) t1
+    on t.code= t1.xzqh
+  </select>
+
+  <!--智能监管  -->
+  <select id="znjg" resultType="com.cd.zjyf.pojo.qr.HomePage.ZNJG" >
+    select * from
+    (<include refid="csd"></include>) t,
+    (<include refid="zcd"></include>) t1,
+    (<include refid="zl"></include>) t2,
+    (<include refid="car"></include>) t3
+  </select>
+  <!--产生点个数(已改)-->
+  <sql id="csd">
+    select count(*) csd from tbl_ylws_jbxx
+    where jgdwid in(select id from tbl_jgdw_jbxx where xzqh like #{userxzqh}||'%' )
+    and yljgtype!='1'
+  </sql>
+  <!--暂存点现有重量（已改）  -->
+  <sql id="zcd">
+    select round(sum(zl)/1000,2) zcd from tbl_ylfw_jsdj where jsqk!='1'
+    and zcdid in (
+    <include refid="dwIn"/>
+    )
+  </sql>
+  <!--无害处置重量（已改）  -->
+  <sql id="zl">
+    select round(sum(zl)/1000,2) zl from tbl_ylfw_jsdj where endtime >=trunc(sysdate,'yyyy')
+    and zcdid in (
+    <include refid="dwIn"/>
+    )
+  </sql>
+  <!--运输车辆数 -->
+  <sql id="car">
+    select count(*) car from tbl_app_user where rylx='3'
+  </sql>
+
+  <sql id="dwIn">
+    <if test="zcdid!=''">
+        #{zcdid}
+    </if>
+    <if test="zcdid==''">
+    select t.id  from tbl_ylws_jbxx t left join tbl_jgdw_jbxx t1
+    on t.jgdwid= t1.id
+    where t1.xzqh like #{userxzqh}||'%'
+      and YYZT='0'
+    </if>
+  </sql>
+
+
+</mapper>

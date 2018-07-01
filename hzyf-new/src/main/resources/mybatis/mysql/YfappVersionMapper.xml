@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.YfappVersionMapper" >
+  <resultMap id="BaseResultMap" type="com.cd.zjyf.bean.YfappVersion" >
+    <id column="APPKEY" property="appkey" jdbcType="VARCHAR" />
+    <result column="BYH" property="byh" jdbcType="DECIMAL" />
+    <result column="BBH" property="bbh" jdbcType="VARCHAR" />
+    <result column="RJDX" property="rjdx" jdbcType="VARCHAR" />
+    <result column="GXSM" property="gxsm" jdbcType="VARCHAR" />
+    <result column="GXDZ" property="gxdz" jdbcType="VARCHAR" />
+    <result column="FBRQ" property="fbrq" jdbcType="DATE" />
+    <result column="ZXBB" property="zxbb" jdbcType="VARCHAR" />
+    <result column="GXLX" property="gxlx" jdbcType="VARCHAR" />
+    <result column="CJRID" property="cjrid" jdbcType="VARCHAR" />
+    <result column="CJSJ" property="cjsj" jdbcType="DATE" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    APPKEY, BYH, BBH, RJDX, GXSM, GXDZ, FBRQ, ZXBB, GXLX, CJRID, CJSJ
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.cd.zjyf.bean.YfappVersionExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from TBL_YFAPP_VERSION
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from TBL_YFAPP_VERSION
+    where APPKEY = #{appkey,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from TBL_YFAPP_VERSION
+    where APPKEY = #{appkey,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.cd.zjyf.bean.YfappVersionExample" >
+    delete from TBL_YFAPP_VERSION
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.cd.zjyf.bean.YfappVersion" >
+        <selectKey resultType="java.lang.String" keyProperty="id" order="BEFORE">
+          select replace(uuid(), '-', '')
+    </selectKey>
+    insert into TBL_YFAPP_VERSION (APPKEY, BYH, BBH,
+      RJDX, GXSM, GXDZ, FBRQ, 
+      ZXBB, GXLX, CJRID, 
+      CJSJ)
+    values (#{appkey,jdbcType=VARCHAR}, #{byh,jdbcType=DECIMAL}, #{bbh,jdbcType=VARCHAR}, 
+      #{rjdx,jdbcType=VARCHAR}, #{gxsm,jdbcType=VARCHAR}, #{gxdz,jdbcType=VARCHAR}, #{fbrq}, 
+      #{zxbb,jdbcType=VARCHAR}, #{gxlx,jdbcType=VARCHAR}, #{cjrid,jdbcType=VARCHAR}, 
+      #{cjsj})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cd.zjyf.bean.YfappVersion" >
+        <selectKey resultType="java.lang.String" keyProperty="id" order="BEFORE">
+          select replace(uuid(), '-', '')
+    </selectKey>
+    insert into TBL_YFAPP_VERSION
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="appkey != null" >
+        APPKEY,
+      </if>
+      <if test="byh != null" >
+        BYH,
+      </if>
+      <if test="bbh != null" >
+        BBH,
+      </if>
+      <if test="rjdx != null" >
+        RJDX,
+      </if>
+      <if test="gxsm != null" >
+        GXSM,
+      </if>
+      <if test="gxdz != null" >
+        GXDZ,
+      </if>
+      <if test="fbrq != null" >
+        FBRQ,
+      </if>
+      <if test="zxbb != null" >
+        ZXBB,
+      </if>
+      <if test="gxlx != null" >
+        GXLX,
+      </if>
+      <if test="cjrid != null" >
+        CJRID,
+      </if>
+      <if test="cjsj != null" >
+        CJSJ,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="appkey != null" >
+        #{appkey,jdbcType=VARCHAR},
+      </if>
+      <if test="byh != null" >
+        #{byh,jdbcType=DECIMAL},
+      </if>
+      <if test="bbh != null" >
+        #{bbh,jdbcType=VARCHAR},
+      </if>
+      <if test="rjdx != null" >
+        #{rjdx,jdbcType=VARCHAR},
+      </if>
+      <if test="gxsm != null" >
+        #{gxsm,jdbcType=VARCHAR},
+      </if>
+      <if test="gxdz != null" >
+        #{gxdz,jdbcType=VARCHAR},
+      </if>
+      <if test="fbrq != null" >
+        #{fbrq},
+      </if>
+      <if test="zxbb != null" >
+        #{zxbb,jdbcType=VARCHAR},
+      </if>
+      <if test="gxlx != null" >
+        #{gxlx,jdbcType=VARCHAR},
+      </if>
+      <if test="cjrid != null" >
+        #{cjrid,jdbcType=VARCHAR},
+      </if>
+      <if test="cjsj != null" >
+        #{cjsj},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.cd.zjyf.bean.YfappVersionExample" resultType="java.lang.Integer" >
+    select count(*) from TBL_YFAPP_VERSION
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update TBL_YFAPP_VERSION
+    <set >
+      <if test="record.appkey != null" >
+        APPKEY = #{record.appkey,jdbcType=VARCHAR},
+      </if>
+      <if test="record.byh != null" >
+        BYH = #{record.byh,jdbcType=DECIMAL},
+      </if>
+      <if test="record.bbh != null" >
+        BBH = #{record.bbh,jdbcType=VARCHAR},
+      </if>
+      <if test="record.rjdx != null" >
+        RJDX = #{record.rjdx,jdbcType=VARCHAR},
+      </if>
+      <if test="record.gxsm != null" >
+        GXSM = #{record.gxsm,jdbcType=VARCHAR},
+      </if>
+      <if test="record.gxdz != null" >
+        GXDZ = #{record.gxdz,jdbcType=VARCHAR},
+      </if>
+      <if test="record.fbrq != null" >
+        FBRQ = #{record.fbrq},
+      </if>
+      <if test="record.zxbb != null" >
+        ZXBB = #{record.zxbb,jdbcType=VARCHAR},
+      </if>
+      <if test="record.gxlx != null" >
+        GXLX = #{record.gxlx,jdbcType=VARCHAR},
+      </if>
+      <if test="record.cjrid != null" >
+        CJRID = #{record.cjrid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.cjsj != null" >
+        CJSJ = #{record.cjsj},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update TBL_YFAPP_VERSION
+    set APPKEY = #{record.appkey,jdbcType=VARCHAR},
+      BYH = #{record.byh,jdbcType=DECIMAL},
+      BBH = #{record.bbh,jdbcType=VARCHAR},
+      RJDX = #{record.rjdx,jdbcType=VARCHAR},
+      GXSM = #{record.gxsm,jdbcType=VARCHAR},
+      GXDZ = #{record.gxdz,jdbcType=VARCHAR},
+      FBRQ = #{record.fbrq},
+      ZXBB = #{record.zxbb,jdbcType=VARCHAR},
+      GXLX = #{record.gxlx,jdbcType=VARCHAR},
+      CJRID = #{record.cjrid,jdbcType=VARCHAR},
+      CJSJ = #{record.cjsj}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cd.zjyf.bean.YfappVersion" >
+    update TBL_YFAPP_VERSION
+    <set >
+      <if test="byh != null" >
+        BYH = #{byh,jdbcType=DECIMAL},
+      </if>
+      <if test="bbh != null" >
+        BBH = #{bbh,jdbcType=VARCHAR},
+      </if>
+      <if test="rjdx != null" >
+        RJDX = #{rjdx,jdbcType=VARCHAR},
+      </if>
+      <if test="gxsm != null" >
+        GXSM = #{gxsm,jdbcType=VARCHAR},
+      </if>
+      <if test="gxdz != null" >
+        GXDZ = #{gxdz,jdbcType=VARCHAR},
+      </if>
+      <if test="fbrq != null" >
+        FBRQ = #{fbrq},
+      </if>
+      <if test="zxbb != null" >
+        ZXBB = #{zxbb,jdbcType=VARCHAR},
+      </if>
+      <if test="gxlx != null" >
+        GXLX = #{gxlx,jdbcType=VARCHAR},
+      </if>
+      <if test="cjrid != null" >
+        CJRID = #{cjrid,jdbcType=VARCHAR},
+      </if>
+      <if test="cjsj != null" >
+        CJSJ = #{cjsj},
+      </if>
+    </set>
+    where APPKEY = #{appkey,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cd.zjyf.bean.YfappVersion" >
+    update TBL_YFAPP_VERSION
+    set BYH = #{byh,jdbcType=DECIMAL},
+      BBH = #{bbh,jdbcType=VARCHAR},
+      RJDX = #{rjdx,jdbcType=VARCHAR},
+      GXSM = #{gxsm,jdbcType=VARCHAR},
+      GXDZ = #{gxdz,jdbcType=VARCHAR},
+      FBRQ = #{fbrq},
+      ZXBB = #{zxbb,jdbcType=VARCHAR},
+      GXLX = #{gxlx,jdbcType=VARCHAR},
+      CJRID = #{cjrid,jdbcType=VARCHAR},
+      CJSJ = #{cjsj}
+    where APPKEY = #{appkey,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,656 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.ProjectMapper" >
+
+
+<!-- 注意：这里的收集时间全部是jstime（清算时间）而不是endtime接收时间）,其实都一样的，因为有条件jsqk='1' -->
+<!-- 暂存点 带有条件jsqk='1'，产生点不带条件-->
+
+<!--    &lt;!&ndash;人员管理条件查询&ndash;&gt;
+    &lt;!&ndash;用户名/姓名/人员类型/机构名称&ndash;&gt;
+    <select id="cqueryRY"  resultType="string" parameterType="java.lang.String">
+        select * from tbl_app_user t
+        left join tbl_ylws_jbxx t1
+        on t.yljgid=t1.id
+        where dwdzbm like #{userxzqh}||'%'
+        <if test='id!=null and id!=""'>
+            and id like '%||'#{id}||'%'
+        </if>
+        <if test='xm!=null and xm!=""'>
+            and xm like '%||'#{xm}||'%'
+        </if>
+        <if test='rylx!=null and rylx!=""'>
+            and rylx=#{rylx}
+        </if>
+        <if test='dwmc!=null and dwmc!=""'>
+            and dwmc like '%||'#{dwmc}||'%
+        </if>
+    </select>-->
+
+    <!--污水监测查询-->
+    <!--单位名称/行政区划/上传状态/是否污水上传-->
+    <select id="querySewage"  resultType="com.cd.zjyf.pojo.qr.SewageQR">
+        SELECT * from (
+        SELECT
+        CASE WHEN sum(state) >0 then '1' else '0' end as state,
+        yljgid from tbl_ylws_upload group by yljgid
+        ) t
+        left join
+        tbl_ylws_jbxx t1
+        on t.yljgid=t1.id
+        where
+        jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+        AND is_sewage='1'
+        AND (isdelete != '1' OR isdelete IS NULL)
+        <if test='zcdid!=null and zcdid!=""'>
+            and yljgtype!='1'  and zcdid=#{zcdid}
+        </if>
+        <if test='dwmc!=null and dwmc!=""'>
+            and dwmc like CONCAT('%',#{dwmc},'%')
+        </if>
+
+        <if test='xzqh!=null and xzqh!=""'>
+            and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{xzqh},'%') )
+        </if>
+        <if test='zcdid!=null and zcdid!=""'>
+            and yljgtype!='1'  and zcdid=#{zcdid}
+        </if>
+        <if test='state!=null and state!=""'>
+            and state = #{state}
+        </if>
+        <if test='year!=null and year!=""'>
+            and year = #{year}
+        </if>
+         order by DJSJ DESC,id DESC
+    </select>
+
+    <!--污水监测详情查询-->
+    <select id="querySewageInfo"  resultType="com.cd.zjyf.pojo.qr.SewageQR">
+            SELECT t.*,t1.xm upload_user,fun_csdmc2(t.yljgid) dwmc from tbl_ylws_upload t left join tbl_app_user t1
+            on t.userid=t1.id
+            where t.yljgid= #{yljgid}
+            <if test='state!=null and state!=""'>
+                and state = #{state}
+            </if>
+            <if test='year!=null and year!=""'>
+                and year = #{year}
+            </if>
+            <if test='uploadUser!=null and uploadUser!=""'>
+                and xm like CONCAT('%',#{uploadUser},'%')
+            </if>
+
+    </select>
+
+
+    <!--医疗机构条件查询-->
+    <!--单位名称/医疗机构类型/所属机构/行政区划/社会信用代码-->
+    <!--noChange-->
+    <select id="cqueryYLJG"  resultType="com.cd.zjyf.pojo.qr.YlwsJbxxQR">
+        select t.*,(select dwmc from tbl_ylws_jbxx where id=t.zcdid) zcdmc,(select jgdwmc from tbl_jgdw_jbxx where id=t.jgdwid) jgdwmc from tbl_ylws_jbxx t
+        where
+        jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+        AND (isdelete != '1' OR isdelete IS NULL)
+        <if test='zcdid!=null and zcdid!=""'>
+          and yljgtype!='1'  and zcdid=#{zcdid}
+        </if>
+        <if test='dwmc!=null and dwmc!=""'>
+            and dwmc like CONCAT('%',#{dwmc},'%')
+        </if>
+        <if test='yljgtype!=null and yljgtype!=""'>
+            and yljgtype=#{yljgtype}
+        </if>
+        <if test='jgdwid!=null and jgdwid!=""'>
+            and jgdwid like  CONCAT('%',#{jgdwid},'%')
+        </if>
+        <if test='xzqh!=null and xzqh!=""'>
+            and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{xzqh},'%') )
+        </if>
+        <if test='shyxdm!=null and shyxdm!=""'>
+            and shyxdm=#{shyxdm}
+        </if>
+        <if test='zcd!=null and zcd!=""'>
+            and zcdid = #{zcd}
+        </if>
+        order by DJSJ DESC,id DESC
+    </select>
+    <!--        order by DJSJ DESC
+        这行先去掉了，因为DJSJ相精确到天，当相同时候，通过rownum分页的数据，可能会重复
+        但是，连个字段排序不可能重复，所以不受影响
+    -->
+
+    <!--医疗机构管理新增/修改——暂存点下拉-->
+    <!--noChange-->
+    <select id="zcdDropdown" resultType="com.cd.zjyf.pojo.Dropdown">
+        select id,dwmc name from tbl_ylws_jbxx
+        where YLJGTYPE ='1'
+        and jgdwid =#{xzqh}
+        and (isdelete!='1' or isdelete is null)
+    </select>
+
+    <!--医疗机构，接收明细，接收情况条件查询——暂存点下拉-->
+    <!--noChange-->
+   <select id="zcdDropdown1" resultType="com.cd.zjyf.pojo.Dropdown">
+    select id,dwmc name from tbl_ylws_jbxx
+    where YLJGTYPE ='1'
+     and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+     and (isdelete!='1' or isdelete is null)
+    </select>
+
+
+    <!--医疗机构管理新增/修改—监管单位下拉-->
+    <!--noChange-->
+    <select id="jgdwDropdown" resultType="com.cd.zjyf.pojo.Dropdown">
+        select id,JGDWMC name from tbl_jgdw_jbxx
+        where  id in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+    </select>
+
+    <!--人员管理新增/修改—机构下拉（三种）-->
+    <!--noChange-->
+    <select id="userjgDropdown" resultType="com.cd.zjyf.pojo.Dropdown">
+
+        <if test='rylx=="4" or rylx=="6"'>
+            select id,JGDWMC name from tbl_jgdw_jbxx
+            where  id in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+        </if>
+        <if test='rylx=="1" or rylx=="2" or rylx=="5"'>
+            select id,dwmc name from tbl_ylws_jbxx
+            where 1=1
+            <if test='rylx!="1"'>
+             and YLJGTYPE ='1'
+            </if>
+            and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+            and (isdelete!='1' or isdelete is null)
+        </if>
+
+
+    </select>
+
+    <!--人员管理新增/修改—医疗机构下拉-->
+    <!--noChange-->
+    <select id="userYljgDropdown" resultType="com.cd.zjyf.pojo.Dropdown">
+            select id,dwmc name from tbl_ylws_jbxx
+            where  1=1
+        <choose>
+            <when test='rylx!="1"'>
+                and YLJGTYPE ='1'
+            </when>
+            <otherwise>
+                and YLJGTYPE !='1'
+            </otherwise>
+        </choose>
+
+        <if test='zcdid!="" and zcdid!=null'>
+            and (id =#{zcdid} or zcdid=#{zcdid})
+        </if>
+            and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+            and (isdelete!='1' or isdelete is null)
+    </select>
+
+    <!--人员管理新增/修改—监管单位下拉-->
+    <!--noChange-->
+    <select id="userJgdwDropdown" resultType="com.cd.zjyf.pojo.Dropdown">
+            select id,JGDWMC name from tbl_jgdw_jbxx
+            where  id in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{userxzqh},'%') )
+    </select>
+<!--
+    &lt;!&ndash;人员管理新增/修改——医疗机构下拉（按人员类型级联下拉）&ndash;&gt;
+    <select id="">
+
+    </select>
+
+    &lt;!&ndash;人员管理新增/修改——监管单位下拉&ndash;&gt;
+    <select id="">
+
+    </select>
+-->
+
+        <!--重新生成代码自己写-->
+        <!--查询管理者用户登陆的行政区划编码(人员类型4（监管者）5（暂存点的后台管理员）)-->
+    <!--noChange-->
+    <select id="queryUserXZQH" resultType="string" parameterType="com.cd.zjyf.pojo.LoginUserInfo">
+        <if test='rylx=="4" or rylx=="6"'>
+            select xzqh userxzqh from tbl_app_user t left join
+            tbl_jgdw_jbxx t1 on  t.jgdwid=t1.id
+        </if>
+
+        <if test='rylx=="1" or rylx=="2" or rylx=="5"'>
+            select xzqh  from tbl_app_user t
+            left join tbl_ylws_jbxx t1
+            on t.yljgid = t1.id
+            left join tbl_jgdw_jbxx t2
+            on t1.jgdwid = t2.id
+        </if>
+        where t.id=#{userid}
+    </select>
+
+    <!--管理员查看的接收明细-->
+    <!--接收时间 是否清算 类别 重量 交接人 收集人 运输人  -->
+    <!--already-->
+<!--    <select id="queryJSQK" resultType="com.cd.zjyf.pojo.qr.JSQKQR">
+   select fun_csdmc2(t.zcdid) zcd,fun_csdmc2(csdid) csd,jstime,jsqk,lx,zl,fun_name(tgzid) tgz,fun_name(jsrid) jsr,fun_name(qsrid) qsr from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1
+        on t.zcdid = t1.id
+        left join tbl_jgdw_jbxx t2
+        on t1.jgdwid = t2.id
+        where xzqh like CONCAT(#{userxzqh},'%')
+        <if test='zcdid!=null and zcdid!=""'>
+            and t.zcdid=#{zcdid}
+        </if>
+        <if test='xzqh!=null and xzqh!=""'>
+            and xzqh like CONCAT(#{xzqh},'%')
+        </if>
+        <if test='beginTime!=null'>
+            and date_format(jstime,'%Y%m%d') &gt;=date_format(#{beginTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='endTime!=null'>
+            and date_format(jstime,'%Y%m%d') &lt;=date_format(#{endTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='zcd!=null and zcd.size()>0'>
+            and t.zcdid in
+            <foreach collection="zcd" item="zcd" index="index"
+                     open="(" close=")" separator=",">
+                #{zcd}
+            </foreach>
+        </if>
+        <if test='csd!=null and csd!=""'>
+            and fun_csdmc2(csdid) like CONCAT('%','#{csd}','%')
+        </if>
+        <if test='jsqk!=null and jsqk!=""'>
+            and jsqk=#{jsqk}
+        </if>
+        <if test="jstimeOrder!=''">
+          order by jstime ${jstimeOrder},t1.id
+        </if>
+    </select>-->
+    <select id="queryJSQK" resultType="com.cd.zjyf.pojo.qr.JSQKQR" fetchSize="1000">
+        select
+        t1.dwmc zcd,t3.dwmc csd,jstime,jsqk,lx,zl,t4.xm tgz,t5.xm jsr,t6.xm qsr from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1
+        on t.zcdid = t1.id
+        left join tbl_jgdw_jbxx t2
+        on t1.jgdwid = t2.id
+        left join tbl_ylws_jbxx t3
+        on t.csdid = t3.id
+        left join tbl_app_user t4
+        on t.tgzid=t4.id
+        left join tbl_app_user t5
+        on t.jsrid=t5.id
+        left join tbl_app_user t6
+        on t.qsrid=t6.id
+        where xzqh like CONCAT(#{userxzqh},'%')
+        <if test='zcdid!=null and zcdid!=""'>
+            and t.zcdid=#{zcdid}
+        </if>
+        <if test='xzqh!=null and xzqh!=""'>
+            and xzqh like CONCAT(#{xzqh},'%')
+        </if>
+        <if test='beginTime!=null'>
+            and date_format(jstime,'%Y%m%d') &gt;=date_format(#{beginTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='endTime!=null'>
+            and date_format(jstime,'%Y%m%d') &lt;=date_format(#{endTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='zcd!=null and zcd.size()>0'>
+            and t.zcdid in
+            <foreach collection="zcd" item="zcd" index="index"
+                     open="(" close=")" separator=",">
+                #{zcd}
+            </foreach>
+        </if>
+        <if test='csd!=null and csd!=""'>
+            and fun_csdmc2(csdid) like CONCAT('%',#{csd},'%')
+        </if>
+        <if test='jsqk!=null and jsqk!=""'>
+            and jsqk=#{jsqk}
+        </if>
+        <choose>
+            <when test="jstimeOrder!=''">
+                order by jstime ${jstimeOrder},t1.id
+            </when>
+            <otherwise>
+                order by jstime desc,t1.id
+            </otherwise>
+        </choose>
+    </select>
+
+
+<!--
+    order by jsqk,jstime desc
+-->
+
+    <!--产生点送达率汇总表-->
+    <select id="querySDL" resultType="com.cd.zjyf.pojo.qr.SDLQR">
+
+    </select>
+
+    <!--        nvl(fun_csdmc2(t.zcdid),'合计') zcd-->
+    <!--接收情况列表-->
+    <select id="queryJSMX"  resultType="com.cd.zjyf.pojo.qr.JSMXQR">
+    select
+        case
+        when t.zcdid IS NOT NULL then  fun_csdmc2(t.zcdid)
+        else '合计' end zcd,
+     sum(case when lx='01' then sl else 0 end) `ssl`,sum(case when lx='01' then zl else 0 end) szl
+    ,sum(case when lx='02' then sl else 0 end) gsl,sum(case when lx='02' then zl else 0 end) gzl
+    ,sum(case when lx='03' then sl else 0 end) bsl,sum(case when lx='03' then zl else 0 end) bzl
+    ,sum(case when lx='04' then sl else 0 end) ysl,sum(case when lx='04' then zl else 0 end) yzl
+    ,sum(case when lx='05' then sl else 0 end) hsl,sum(case when lx='05' then zl else 0 end) hzl
+    ,sum(sl) sl,sum(zl) zl
+        from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1
+        on t.zcdid = t1.id
+        left join tbl_jgdw_jbxx t2
+        on t1.jgdwid = t2.id
+        where xzqh like CONCAT(#{userxzqh},'%')
+        <if test='zcdid!=null and zcdid!=""'>
+            and t.zcdid=#{zcdid}
+        </if>
+        <if test='xzqh!=null and xzqh!=""'>
+            and xzqh like CONCAT(#{xzqh},'%')
+        </if>
+        <if test='zcd!=null and zcd.size()>0'>
+            and t.zcdid in
+            <foreach collection="zcd" item="zcd" index="index"
+                     open="(" close=")" separator=",">
+                #{zcd}
+            </foreach>
+        </if>
+        <if test='beginTime!=null'>
+        and date_format(jstime,'%Y%m%d') &gt;=date_format(#{beginTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='endTime!=null'>
+          and date_format(jstime,'%Y%m%d') &lt;=date_format(#{endTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='jsqk!=null and jsqk!=""'>
+            and jsqk=#{jsqk}
+        </if>
+        group  by t.zcdid with ROLLUP
+    </select>
+
+    <!--接收同比图-->
+    <select id="queryJSTB"  resultType="com.cd.zjyf.pojo.qr.JSTBQR">
+        select  name, cs, zl,t.code
+        from (
+        select <include refid="getFunByLevel"/>(code) code,name
+        from tbl_areainfo
+        where <include refid="getFunByLevel"/>(code) like CONCAT(#{userxzqh},'_%')
+        and code = <include refid="getFunByLevel"/>(code)
+
+        ) t
+        left join (
+        select <include refid="getFunByLevel"/>(xzqh) code, count(*) cs, sum(zl) zl
+        from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1
+        on t.csdid = t1.id
+        left join tbl_jgdw_jbxx t2
+        on t1.jgdwid = t2.id
+        where xzqh like CONCAT(#{userxzqh},'%')
+        <if test='beginTime!=null'>
+            and date_format(jstime,'%Y%m%d') &gt;=date_format(#{beginTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='endTime!=null'>
+            and date_format(jstime,'%Y%m%d') &lt;=date_format(#{endTime,jdbcType=DATE},'%Y%m%d')
+        </if>
+        group by <include refid="getFunByLevel"/>(xzqh)
+        ) t1
+                on t.code = t1.code
+        order by code
+    </select>
+    <!--根据level不同获取直辖名-->
+    <sql id="getZX">
+        <if test="level==1">
+            '省直辖'
+        </if>
+        <if test="level==2">
+            '市直辖'
+        </if>
+        <if test="level==3">
+            '区直辖'
+        </if>
+    </sql>
+
+
+    <sql id="jstb_group">
+        <choose>
+            <when test='xzqhLevel==2'>
+                SELECT
+                fun_toarea (CODE) CODE,
+                NAME
+                FROM
+                tbl_areainfo
+                WHERE
+                fun_toarea (CODE) LIKE CONCAT(#{xzqh}, '_%')
+                AND CODE = fun_toarea (CODE)
+            </when>
+            <otherwise>
+                SELECT
+                t1.id code,
+                t1.dwmc name,
+                sum(zl) zl
+                FROM
+                tbl_ylfw_jsdj t
+                LEFT JOIN tbl_ylws_jbxx t1 ON t.zcdid = t1.id
+                LEFT JOIN tbl_jgdw_jbxx t2 ON t1.jgdwid = t2.id
+                WHERE
+                xzqh LIKE CONCAT(#{xzqh}, '%')
+                GROUP BY t1.id
+            </otherwise>
+        </choose>
+    </sql>
+
+    <sql id="jstb_type">
+        <choose>
+            <when test='xzqhLevel==2'>
+                xzqh
+            </when>
+            <otherwise>
+                t1.id
+            </otherwise>
+        </choose>
+    </sql>
+    <!--新同比-->
+    <select id="queryJSTBN"  resultType="com.cd.zjyf.pojo.qr.JSTBNQR">
+    SELECT t.name,t1.zl jzl,t2.zl qzl FROM
+    (
+    <include refid="jstb_group"/>
+    ) t
+    left join
+    (
+    SELECT
+     <include refid="jstb_type"/> code,
+    sum(zl) zl
+    FROM
+    tbl_ylfw_jsdj t
+    LEFT JOIN tbl_ylws_jbxx t1 ON t.zcdid = t1.id
+    LEFT JOIN tbl_jgdw_jbxx t2 ON t1.jgdwid = t2.id
+    WHERE
+    xzqh LIKE CONCAT(#{xzqh}, '%')
+    and STR_TO_DATE(jstime,'%Y-%m')=STR_TO_DATE( #{month}, '%Y-%m' )
+    GROUP BY <include refid="jstb_type"/>
+    ) t1
+    on t.code=t1.code
+    left JOIN
+    (
+    SELECT
+    <include refid="jstb_type"/> code,
+    sum(zl) zl
+    FROM
+    tbl_ylfw_jsdj t
+    LEFT JOIN tbl_ylws_jbxx t1 ON t.zcdid = t1.id
+    LEFT JOIN tbl_jgdw_jbxx t2 ON t1.jgdwid = t2.id
+    WHERE
+    xzqh LIKE CONCAT(#{xzqh}, '%')
+        and STR_TO_DATE(DATE_ADD(jstime,interval -1 year),'%Y-%m')=STR_TO_DATE( #{month}, '%Y-%m' )
+        GROUP BY <include refid="jstb_type"/>
+    ) t2
+    on t1.code=t2.code
+    </select>
+
+    <!--接收环比图-->
+    <select id="queryJSHB"  resultType="com.cd.zjyf.pojo.qr.JSHBQR">
+          select  name,cs,zl,<include refid="timeUnit"/> time from
+        (
+        select* from
+        (
+        select <include refid="getFunByLevel"/>(code) code,name
+        from tbl_areainfo
+        where <include refid="getFunByLevel"/>(code) like CONCAT(#{userxzqh},'_%')
+        and code =<include refid="getFunByLevel"/>(code)
+        ) temp
+        ,
+        (
+        <include refid="timeType1"/>
+        ) temp2
+        ) t
+        left join
+        (
+        select <include refid="timeType2"/> time,<include refid="getFunByLevel"/>(xzqh) code,count(*) cs,sum(zl) zl  from tbl_ylfw_jsdj t
+        left join  tbl_ylws_jbxx t1 on t.zcdid =t1.id
+        left join tbl_jgdw_jbxx t2
+        on t1.jgdwid = t2.id
+        where xzqh like CONCAT(#{userxzqh},'%')
+        <if test='beginTimeSql!=null'>
+            and date_format(jstime,'%Y%m%d') &gt;=date_format(#{beginTimeSql,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='endTimeSql!=null'>
+            and date_format(jstime,'%Y%m%d') &lt;date_format(#{endTimeSql,jdbcType=DATE},'%Y%m%d')
+        </if>
+        group by <include refid="getFunByLevel"/>(xzqh),<include refid="timeType2"/>
+        ) t1
+        on t.code=t1.code
+        and t.time=t1.time
+
+    </select>
+
+    <!--接收环比图按暂存点-->
+    <select id="queryJSHBZCD"  resultType="com.cd.zjyf.pojo.qr.JSHBQR">
+        select  name,cs,zl,<include refid="timeUnit"/> time from
+        (
+        SELECT * from (
+        SELECT
+        t1.id,dwmc name
+        FROM
+        tbl_ylws_jbxx t1
+        LEFT JOIN tbl_jgdw_jbxx t2
+        ON t1.jgdwid = t2.id
+        WHERE xzqh LIKE CONCAT(#{xzqh}, '%') and yljgtype='1'
+        ) t,
+        (
+        <include refid="timeType1"/>
+        ) t1
+        ) t
+        left join
+        (
+        SELECT
+        <include refid="timeType2"/> time,
+        t1.id,
+        count(*) cs,
+        sum(zl) zl
+        FROM
+        tbl_ylfw_jsdj t
+        LEFT JOIN tbl_ylws_jbxx t1 ON t.zcdid = t1.id
+        LEFT JOIN tbl_jgdw_jbxx t2 ON t1.jgdwid = t2.id
+        WHERE
+        xzqh LIKE CONCAT(#{xzqh}, '%')
+        <if test='beginTimeSql!=null'>
+            and date_format(jstime,'%Y%m%d') &gt;=date_format(#{beginTimeSql,jdbcType=DATE},'%Y%m%d')
+        </if>
+        <if test='endTimeSql!=null'>
+            and date_format(jstime,'%Y%m%d') &lt;date_format(#{endTimeSql,jdbcType=DATE},'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.id,
+        <include refid="timeType2"/>
+        ) t1
+        on t.id=t1.id
+        and t.time=t1.time
+    </select>
+
+
+    <!--这个季度这里交给前端写-->
+    <sql id="timeUnit">
+        <if test="timeType==1">
+            CONCAT(t.time,'年')
+        </if>
+        <if test="timeType==2">
+            CONCAT(t.time,'季度')
+        </if>
+        <if test="timeType==3">
+            CONCAT(t.time,'月')
+        </if>
+    </sql>
+
+    <sql id="timeType1">
+        <if test="timeType==1">
+            select date_format(DATE_ADD(now(),interval 0 year),'%Y') as time
+            union all
+            select date_format(DATE_ADD(now(),interval -1 year),'%Y') as time
+            union all
+            select date_format(DATE_ADD(now(),interval -2 year),'%Y') as time
+            union all
+            select date_format(DATE_ADD(now(),interval -3 year),'%Y') as time
+            union all
+            select date_format(DATE_ADD(now(),interval -4 year),'%Y') as time
+        </if>
+        <if test="timeType==2">
+            select '1' time
+            union all
+            select '2'
+            union all
+            select '3'
+            union all
+            select '4'
+        </if>
+        <if test="timeType==3">
+            select '01' time 
+            union all
+            select '02' 
+            union all
+            select '03' 
+            union all
+            select '04' 
+            union all
+            select '05' 
+            union all
+            select '06' 
+            union all
+            select '07' 
+            union all
+            select '08' 
+            union all
+            select '09' 
+            union all
+            select '10' 
+            union all
+            select '11' 
+            union all
+            select '12' 
+        </if>
+    </sql>
+
+    <sql id="timeType2">
+        <if test="timeType==1">
+            YEAR (jstime)
+        </if>
+        <if test="timeType==2">
+            QUARTER(jstime)
+        </if>
+        <if test="timeType==3">
+            DATE_FORMAT( jstime, '%m' )
+        </if>
+    </sql>
+
+
+    <!--根据level不同选择不同的方法-->
+    <sql id="getFunByLevel">
+        <if test="level==1">
+            fun_tocity
+        </if>
+      <if test="level==2">
+          fun_toarea
+      </if>
+    </sql>
+
+
+
+</mapper>

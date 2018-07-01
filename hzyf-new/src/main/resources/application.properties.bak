@@ -1,0 +1,51 @@
+#DB Configuration:
+spring.datasource.driverClassName=oracle.jdbc.OracleDriver
+spring.datasource.url=jdbc:oracle:thin:@192.168.22.216:1521:orcl
+
+#spring.datasource.username=zj_ylws_test
+#spring.datasource.password=zj_ylws_test
+
+spring.datasource.username=zj_ylws
+spring.datasource.password=zj_ylws
+
+# Maximum size in bytes of the HTTP message header.
+server.tomcat.uri-encoding=UTF-8
+server.port=8086
+
+# Enable Spring's HttpPutFormContentFilter.
+spring.mvc.formcontent.putfilter.enabled=true
+
+# application name
+#spring.application.name=zjyl-web-service
+#eureka.client.serviceUrl.defaultZone=http://192.168.22.163:7001/eureka/,http://192.168.22.163:7002/eureka/
+
+#mybatis 
+mybatis.config-location=classpath:mybatis/mybatis-config.xml
+mybatis.mapper-locations=classpath:mybatis/mapper/*.xml
+
+#show sql
+logging.level.com.cd.zjyf.mapper=DEBUG
+
+logging.level.com.cd.zjyf.controller=DEBUG
+
+#hot bushu
+spring.devtools.restart.enabled=false
+
+#日志
+logging.file=zjyl-web.log
+
+##FTP配置
+FTP_ADDRESS=192.168.22.163
+FTP_PORT=21
+FTP_USERNAME=1
+FTP_PASSWORD=123456
+
+security.basic.enabled=false
+##李明扬本地的
+#security.oauth2.resource.token-info-uri=${auth-server:http://192.168.22.166:9990/uap}/oauth/check_token
+##测试环境1
+#ecurity.oauth2.resource.token-info-uri=${auth-server:http://192.168.22.223:8100/uap}/oauth/check_token
+##测试环境2
+security.oauth2.resource.token-info-uri=${auth-server:http://192.168.22.223:8099/uap}/oauth/check_token
+security.oauth2.client.client-id=pukp*r$r#J0w4fAe
+security.oauth2.client.client-secret=lbgVF&LheDiqNpTNjZm@z95C3l83!Gv#

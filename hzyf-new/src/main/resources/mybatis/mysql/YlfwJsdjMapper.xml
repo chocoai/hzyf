@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.YlfwJsdjMapper" >
+  <resultMap id="BaseResultMap" type="com.cd.zjyf.bean.YlfwJsdj" >
+    <id column="ID" property="id" jdbcType="VARCHAR" />
+    <result column="CSDID" property="csdid" jdbcType="VARCHAR" />
+    <result column="ZCDID" property="zcdid" jdbcType="VARCHAR" />
+    <result column="JSTIME" property="jstime"  />
+    <result column="LX" property="lx" jdbcType="VARCHAR" />
+    <result column="SL" property="sl" jdbcType="DECIMAL" />
+    <result column="ZL" property="zl" jdbcType="DECIMAL" />
+    <result column="JSQK" property="jsqk" jdbcType="VARCHAR" />
+    <result column="JJLY" property="jjly" jdbcType="VARCHAR" />
+    <result column="ENDTIME" property="endtime"  />
+    <result column="QSRID" property="qsrid" jdbcType="VARCHAR" />
+    <result column="TGZID" property="tgzid" jdbcType="VARCHAR" />
+    <result column="JSRID" property="jsrid" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, CSDID, ZCDID, JSTIME, LX, SL, ZL, JSQK, JJLY, ENDTIME, QSRID, TGZID, JSRID
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.cd.zjyf.bean.YlfwJsdjExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from TBL_YLFW_JSDJ
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select
+    <include refid="Base_Column_List" />
+    from TBL_YLFW_JSDJ
+    where ID = #{id,jdbcType=VARCHAR}
+  </select>
+
+
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from TBL_YLFW_JSDJ
+    where ID = #{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.cd.zjyf.bean.YlfwJsdjExample" >
+    delete from TBL_YLFW_JSDJ
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.cd.zjyf.bean.YlfwJsdj" >
+    <selectKey resultType="java.lang.String" keyProperty="id" order="BEFORE">
+      select replace(uuid(), '-', '')
+    </selectKey>
+    insert into TBL_YLFW_JSDJ (ID, CSDID, ZCDID,
+    JSTIME, LX, SL, ZL,
+    JSQK, JJLY, ENDTIME, QSRID,
+    TGZID, JSRID)
+    values (#{id,jdbcType=VARCHAR}, #{csdid,jdbcType=VARCHAR}, #{zcdid,jdbcType=VARCHAR},
+    #{jstime}, #{lx,jdbcType=VARCHAR}, #{sl,jdbcType=DECIMAL}, #{zl,jdbcType=DECIMAL},
+    #{jsqk,jdbcType=VARCHAR}, #{jjly,jdbcType=VARCHAR}, #{endtime,jdbcType=TIMESTAMP}, #{qsrid,jdbcType=VARCHAR},
+    #{tgzid,jdbcType=VARCHAR}, #{jsrid,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cd.zjyf.bean.YlfwJsdj" >
+    <selectKey resultType="java.lang.String" keyProperty="id" order="BEFORE">
+      select replace(uuid(), '-', '')
+    </selectKey>
+    insert into TBL_YLFW_JSDJ
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="csdid != null" >
+        CSDID,
+      </if>
+      <if test="zcdid != null" >
+        ZCDID,
+      </if>
+      <if test="jstime != null" >
+        JSTIME,
+      </if>
+      <if test="lx != null" >
+        LX,
+      </if>
+      <if test="sl != null" >
+        SL,
+      </if>
+      <if test="zl != null" >
+        ZL,
+      </if>
+      <if test="jsqk != null" >
+        JSQK,
+      </if>
+      <if test="jjly != null" >
+        JJLY,
+      </if>
+      <if test="endtime != null" >
+        ENDTIME,
+      </if>
+      <if test="qsrid != null" >
+        QSRID,
+      </if>
+      <if test="tgzid != null" >
+        TGZID,
+      </if>
+      <if test="jsrid != null" >
+        JSRID,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="csdid != null" >
+        #{csdid,jdbcType=VARCHAR},
+      </if>
+      <if test="zcdid != null" >
+        #{zcdid,jdbcType=VARCHAR},
+      </if>
+      <if test="jstime != null" >
+        #{jstime},
+      </if>
+      <if test="lx != null" >
+        #{lx,jdbcType=VARCHAR},
+      </if>
+      <if test="sl != null" >
+        #{sl,jdbcType=DECIMAL},
+      </if>
+      <if test="zl != null" >
+        #{zl,jdbcType=DECIMAL},
+      </if>
+      <if test="jsqk != null" >
+        #{jsqk,jdbcType=VARCHAR},
+      </if>
+      <if test="jjly != null" >
+        #{jjly,jdbcType=VARCHAR},
+      </if>
+      <if test="endtime != null" >
+        #{endtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="qsrid != null" >
+        #{qsrid,jdbcType=VARCHAR},
+      </if>
+      <if test="tgzid != null" >
+        #{tgzid,jdbcType=VARCHAR},
+      </if>
+      <if test="jsrid != null" >
+        #{jsrid,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.cd.zjyf.bean.YlfwJsdjExample" resultType="java.lang.Integer" >
+    select count(*) from TBL_YLFW_JSDJ
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update TBL_YLFW_JSDJ
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=VARCHAR},
+      </if>
+      <if test="record.csdid != null" >
+        CSDID = #{record.csdid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.zcdid != null" >
+        ZCDID = #{record.zcdid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.jstime != null" >
+        JSTIME = #{record.jstime},
+      </if>
+      <if test="record.lx != null" >
+        LX = #{record.lx,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sl != null" >
+        SL = #{record.sl,jdbcType=DECIMAL},
+      </if>
+      <if test="record.zl != null" >
+        ZL = #{record.zl,jdbcType=DECIMAL},
+      </if>
+      <if test="record.jsqk != null" >
+        JSQK = #{record.jsqk,jdbcType=VARCHAR},
+      </if>
+      <if test="record.jjly != null" >
+        JJLY = #{record.jjly,jdbcType=VARCHAR},
+      </if>
+      <if test="record.endtime != null" >
+        ENDTIME = #{record.endtime},
+      </if>
+      <if test="record.qsrid != null" >
+        QSRID = #{record.qsrid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.tgzid != null" >
+        TGZID = #{record.tgzid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.jsrid != null" >
+        JSRID = #{record.jsrid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update TBL_YLFW_JSDJ
+    set ID = #{record.id,jdbcType=VARCHAR},
+    CSDID = #{record.csdid,jdbcType=VARCHAR},
+    ZCDID = #{record.zcdid,jdbcType=VARCHAR},
+    JSTIME = #{record.jstime},
+    LX = #{record.lx,jdbcType=VARCHAR},
+    SL = #{record.sl,jdbcType=DECIMAL},
+    ZL = #{record.zl,jdbcType=DECIMAL},
+    JSQK = #{record.jsqk,jdbcType=VARCHAR},
+    JJLY = #{record.jjly,jdbcType=VARCHAR},
+    ENDTIME = #{record.endtime},
+    QSRID = #{record.qsrid,jdbcType=VARCHAR},
+    TGZID = #{record.tgzid,jdbcType=VARCHAR},
+    JSRID = #{record.jsrid,jdbcType=VARCHAR}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cd.zjyf.bean.YlfwJsdj" >
+    update TBL_YLFW_JSDJ
+    <set >
+      <if test="csdid != null" >
+        CSDID = #{csdid,jdbcType=VARCHAR},
+      </if>
+      <if test="zcdid != null" >
+        ZCDID = #{zcdid,jdbcType=VARCHAR},
+      </if>
+      <if test="jstime != null" >
+        JSTIME = #{jstime},
+      </if>
+      <if test="lx != null" >
+        LX = #{lx,jdbcType=VARCHAR},
+      </if>
+      <if test="sl != null" >
+        SL = #{sl,jdbcType=DECIMAL},
+      </if>
+      <if test="zl != null" >
+        ZL = #{zl,jdbcType=DECIMAL},
+      </if>
+      <if test="jsqk != null" >
+        JSQK = #{jsqk,jdbcType=VARCHAR},
+      </if>
+      <if test="jjly != null" >
+        JJLY = #{jjly,jdbcType=VARCHAR},
+      </if>
+      <if test="endtime != null" >
+        ENDTIME = #{endtime,jdbyType=TIMESTAMP},
+      </if>
+      <if test="qsrid != null" >
+        QSRID = #{qsrid,jdbcType=VARCHAR},
+      </if>
+      <if test="tgzid != null" >
+        TGZID = #{tgzid,jdbcType=VARCHAR},
+      </if>
+      <if test="jsrid != null" >
+        JSRID = #{jsrid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cd.zjyf.bean.YlfwJsdj" >
+    update TBL_YLFW_JSDJ
+    set CSDID = #{csdid,jdbcType=VARCHAR},
+      ZCDID = #{zcdid,jdbcType=VARCHAR},
+      JSTIME = #{jstime},
+      LX = #{lx,jdbcType=VARCHAR},
+      SL = #{sl,jdbcType=DECIMAL},
+      ZL = #{zl,jdbcType=DECIMAL},
+      JSQK = #{jsqk,jdbcType=VARCHAR},
+      JJLY = #{jjly,jdbcType=VARCHAR},
+      ENDTIME = #{endtime,jdbcType=TIMESTAMP},
+      QSRID = #{qsrid,jdbcType=VARCHAR},
+      TGZID = #{tgzid,jdbcType=VARCHAR},
+      JSRID = #{jsrid,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

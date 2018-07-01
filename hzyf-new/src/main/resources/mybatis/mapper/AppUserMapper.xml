@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.AppUserMapper" >
+  <resultMap id="BaseResultMap" type="com.cd.zjyf.bean.AppUser" >
+    <id column="ID" property="id" jdbcType="VARCHAR" />
+    <result column="YLJGID" property="yljgid" jdbcType="VARCHAR" />
+    <result column="XM" property="xm" jdbcType="VARCHAR" />
+    <result column="SJH" property="sjh" jdbcType="VARCHAR" />
+    <result column="MM" property="mm" jdbcType="VARCHAR" />
+    <result column="RYLX" property="rylx" jdbcType="VARCHAR" />
+    <result column="JGDWID" property="jgdwid" jdbcType="VARCHAR" />
+    <result column="RYZP" property="ryzp" jdbcType="VARCHAR" />
+    <result column="ZGZT" property="zgzt" jdbcType="VARCHAR" />
+    <result column="ISSH" property="issh" jdbcType="VARCHAR" />
+    <result column="WTGYY" property="wtgyy" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, YLJGID, XM, SJH, MM, RYLX, JGDWID, RYZP, ZGZT, ISSH, WTGYY
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.cd.zjyf.bean.AppUserExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from TBL_APP_USER
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from TBL_APP_USER
+    where ID = #{id,jdbcType=VARCHAR}
+  </select>
+  
+   <select id="selectByPrimaryKeyHasYLJG" resultType="com.cd.zjyf.bean.AppUser" parameterType="java.lang.String" >
+    select 
+    fun_csdmc(yljgid) as yljgmc,
+    <include refid="Base_Column_List" />
+    from TBL_APP_USER
+    where ID = #{id,jdbcType=VARCHAR}
+  </select>
+  
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from TBL_APP_USER
+    where ID = #{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.cd.zjyf.bean.AppUserExample" >
+    delete from TBL_APP_USER
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.cd.zjyf.bean.AppUser" >
+      <selectKey resultType="java.lang.String" keyProperty="id" order="BEFORE">  
+       select sys_guid() as id from dual
+    </selectKey>
+    insert into TBL_APP_USER (ID, YLJGID, XM,
+      SJH, MM, RYLX, JGDWID, 
+      RYZP, ZGZT, ISSH, WTGYY
+      )
+    values (#{id,jdbcType=VARCHAR}, #{yljgid,jdbcType=VARCHAR}, #{xm,jdbcType=VARCHAR}, 
+      #{sjh,jdbcType=VARCHAR}, #{mm,jdbcType=VARCHAR}, #{rylx,jdbcType=VARCHAR}, #{jgdwid,jdbcType=VARCHAR}, 
+      #{ryzp,jdbcType=VARCHAR}, #{zgzt,jdbcType=VARCHAR}, #{issh,jdbcType=VARCHAR}, #{wtgyy,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.cd.zjyf.bean.AppUser" >
+        <selectKey resultType="java.lang.String" keyProperty="id" order="BEFORE">  
+       select sys_guid() as id from dual
+    </selectKey>
+    insert into TBL_APP_USER
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="yljgid != null" >
+        YLJGID,
+      </if>
+      <if test="xm != null" >
+        XM,
+      </if>
+      <if test="sjh != null" >
+        SJH,
+      </if>
+      <if test="mm != null" >
+        MM,
+      </if>
+      <if test="rylx != null" >
+        RYLX,
+      </if>
+      <if test="jgdwid != null" >
+        JGDWID,
+      </if>
+      <if test="ryzp != null" >
+        RYZP,
+      </if>
+      <if test="zgzt != null" >
+        ZGZT,
+      </if>
+      <if test="issh != null" >
+        ISSH,
+      </if>
+      <if test="wtgyy != null" >
+        WTGYY,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="yljgid != null" >
+        #{yljgid,jdbcType=VARCHAR},
+      </if>
+      <if test="xm != null" >
+        #{xm,jdbcType=VARCHAR},
+      </if>
+      <if test="sjh != null" >
+        #{sjh,jdbcType=VARCHAR},
+      </if>
+      <if test="mm != null" >
+        #{mm,jdbcType=VARCHAR},
+      </if>
+      <if test="rylx != null" >
+        #{rylx,jdbcType=VARCHAR},
+      </if>
+      <if test="jgdwid != null" >
+        #{jgdwid,jdbcType=VARCHAR},
+      </if>
+      <if test="ryzp != null" >
+        #{ryzp,jdbcType=VARCHAR},
+      </if>
+      <if test="zgzt != null" >
+        #{zgzt,jdbcType=VARCHAR},
+      </if>
+      <if test="issh != null" >
+        #{issh,jdbcType=VARCHAR},
+      </if>
+      <if test="wtgyy != null" >
+        #{wtgyy,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.cd.zjyf.bean.AppUserExample" resultType="java.lang.Integer" >
+    select count(*) from TBL_APP_USER
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update TBL_APP_USER
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=VARCHAR},
+      </if>
+      <if test="record.yljgid != null" >
+        YLJGID = #{record.yljgid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.xm != null" >
+        XM = #{record.xm,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sjh != null" >
+        SJH = #{record.sjh,jdbcType=VARCHAR},
+      </if>
+      <if test="record.mm != null" >
+        MM = #{record.mm,jdbcType=VARCHAR},
+      </if>
+      <if test="record.rylx != null" >
+        RYLX = #{record.rylx,jdbcType=VARCHAR},
+      </if>
+      <if test="record.jgdwid != null" >
+        JGDWID = #{record.jgdwid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.ryzp != null" >
+        RYZP = #{record.ryzp,jdbcType=VARCHAR},
+      </if>
+      <if test="record.zgzt != null" >
+        ZGZT = #{record.zgzt,jdbcType=VARCHAR},
+      </if>
+      <if test="record.issh != null" >
+        ISSH = #{record.issh,jdbcType=VARCHAR},
+      </if>
+      <if test="record.wtgyy != null" >
+        WTGYY = #{record.wtgyy,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update TBL_APP_USER
+    set ID = #{record.id,jdbcType=VARCHAR},
+      YLJGID = #{record.yljgid,jdbcType=VARCHAR},
+      XM = #{record.xm,jdbcType=VARCHAR},
+      SJH = #{record.sjh,jdbcType=VARCHAR},
+      MM = #{record.mm,jdbcType=VARCHAR},
+      RYLX = #{record.rylx,jdbcType=VARCHAR},
+      JGDWID = #{record.jgdwid,jdbcType=VARCHAR},
+      RYZP = #{record.ryzp,jdbcType=VARCHAR},
+      ZGZT = #{record.zgzt,jdbcType=VARCHAR},
+      ISSH = #{record.issh,jdbcType=VARCHAR},
+      WTGYY = #{record.wtgyy,jdbcType=VARCHAR}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cd.zjyf.bean.AppUser" >
+    update TBL_APP_USER
+    <set >
+      <if test="yljgid != null" >
+        YLJGID = #{yljgid,jdbcType=VARCHAR},
+      </if>
+      <if test="xm != null" >
+        XM = #{xm,jdbcType=VARCHAR},
+      </if>
+      <if test="sjh != null" >
+        SJH = #{sjh,jdbcType=VARCHAR},
+      </if>
+      <if test="mm != null" >
+        MM = #{mm,jdbcType=VARCHAR},
+      </if>
+      <if test="rylx != null" >
+        RYLX = #{rylx,jdbcType=VARCHAR},
+      </if>
+      <if test="jgdwid != null" >
+        JGDWID = #{jgdwid,jdbcType=VARCHAR},
+      </if>
+      <if test="ryzp != null" >
+        RYZP = #{ryzp,jdbcType=VARCHAR},
+      </if>
+      <if test="zgzt != null" >
+        ZGZT = #{zgzt,jdbcType=VARCHAR},
+      </if>
+      <if test="issh != null" >
+        ISSH = #{issh,jdbcType=VARCHAR},
+      </if>
+      <if test="wtgyy != null" >
+        WTGYY = #{wtgyy,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cd.zjyf.bean.AppUser" >
+    update TBL_APP_USER
+    set YLJGID = #{yljgid,jdbcType=VARCHAR},
+      XM = #{xm,jdbcType=VARCHAR},
+      SJH = #{sjh,jdbcType=VARCHAR},
+      MM = #{mm,jdbcType=VARCHAR},
+      RYLX = #{rylx,jdbcType=VARCHAR},
+      JGDWID = #{jgdwid,jdbcType=VARCHAR},
+      RYZP = #{ryzp,jdbcType=VARCHAR},
+      ZGZT = #{zgzt,jdbcType=VARCHAR},
+      ISSH = #{issh,jdbcType=VARCHAR},
+      WTGYY = #{wtgyy,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.AppMapper" >
+
+    <!--提供者统计-->
+    <select id="selectTGZstatisticsFW" resultType="com.cd.zjyf.pojo.qr.TGZstatisticsFWQR" parameterType="com.cd.zjyf.pojo.qc.TGZstatisticsFWQC" >
+        select nvl(lx,'总计') as lx,count(*) as cs,sum(zl) as zl  FROM TBL_YLFW_JSDJ
+        where tgzid=#{id}
+        <if test="	starttime!=null and starttime!=''">
+            <![CDATA[and To_char(jstime,'yyyy-mm-dd hh24:mi:ss')>=#{starttime} ]]>
+        </if>
+        <if test="	endtime!=null and endtime!=''">
+            <![CDATA[ and To_char(jstime,'yyyy-mm-dd hh24:mi:ss')<= #{endtime} ]]>
+        </if>
+        <![CDATA[
+	group  by  rollup(lx)
+	]]>
+    </select>
+
+    <!-- 收集历史信息详情查询 -->
+    <select id="selectTGZhistoryInfo" resultType="com.cd.zjyf.pojo.qr.SJZqueryByQRcodeQR" parameterType="java.lang.String" >
+            select t.*,t1.DWMC as zcdmc ,fun_csdmc2(t2.id) as csdmc,t3.xm as tgzxm  from tbl_ylfw_jsdj t
+            left join tbl_ylws_jbxx t1 on t.zcdid=t1.id
+            left join tbl_ylws_jbxx t2 on t.csdid=t2.id
+            left join tbl_app_user t3 on t.tgzid=t3.id
+            where t.id=#{id}
+        </select>
+
+    <!-- 收集历史信息列表条件查询 -->
+    <select id="selectTGZhistoryList" resultType="com.cd.zjyf.pojo.qr.SJZqueryByQRcodeQR" parameterType="com.cd.zjyf.pojo.qc.SJZhistoryListQC" >
+        select t.*,t1.DWMC as zcdmc ,fun_csdmc2(t2.id) as csdmc,t3.xm as tgzxm  from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1 on t.zcdid=t1.id
+        left join tbl_ylws_jbxx t2 on t.csdid=t2.id
+        left join tbl_app_user t3 on t.tgzid=t3.id
+        where  jsrid=#{jsrid}
+        <if test="	csdid!=null and csdid!=''">
+            and csdid=#{csdid}
+        </if>
+        <if test="	lx!=null and lx!=''">
+            and lx=#{lx}
+        </if>
+        <if test="	jssjStart!=null and jssjStart!=''">
+            <![CDATA[and To_char(jstime,'yyyy-mm-dd hh24:mi:ss')>=#{jssjStart} ]]>
+        </if>
+        <if test="	jssjEnd!=null and jssjEnd!=''">
+            <![CDATA[ and To_char(jstime,'yyyy-mm-dd hh24:mi:ss')<= #{jssjEnd} ]]>
+        </if>
+        order by jstime desc
+    </select>
+
+    <select id="selectTGZindex" resultType="com.cd.zjyf.pojo.YlfwJsdj" parameterType="string" >
+            select * from tbl_ylfw_jsdj where tgzid=#{id} order by jstime desc
+        </select>
+
+    <!--收集者首页，返回的单位未处理
+     <select id="selectSJZindex" resultType="com.cd.zjyf.pojo.qr.SJZindexQR" parameterType="string" >
+        select fun_csdmc2(csdid) as csdmc,max(jstime) as jstime from tbl_ylfw_jsdj where jsrid=#{id}
+        group by csdid order by jstime asc
+      </select>
+      -->
+
+    <!-- 收集者首页，返回的单位未处理 -->
+    <select id="selectSJZindex" resultType="com.cd.zjyf.pojo.qr.SJZindexQR" parameterType="string" >
+            select DISTINCT fun_csdmc2(csdid) as csdmc,jstime,xm as tgzxm from
+            (
+            select * from  tbl_ylfw_jsdj  where (jsrid,jstime) in
+            (
+            select #{id},max(jstime) as jstime from tbl_ylfw_jsdj t where jsrid=#{id}
+            group by csdid
+            )
+            )t
+            left join tbl_app_user t1 on t.tgzid=t1.id
+            order by jstime asc
+        </select>
+
+    <!-- 运输者首页(用于展示暂存点废物列表、用户信息。暂存点废物列表按结算时间从远到近排序。) -->
+    <!-- 用两次group来确定清算次数，次数根据清算时间 -->
+    <select id="selectYSZindex" resultType="com.cd.zjyf.pojo.qr.YSZindexQR" parameterType="string" >
+            select t.*,t1.dwmc  as zcdmc from (
+            select zcdid,sum(jszl) as jszl,max(ENDTIME) as endtime,count(*) as jscs from (
+            select zcdid ,sum(zl) as jszl,max(ENDTIME) as endtime  from tbl_ylfw_jsdj where qsrid=#{id}  and jsqk='1'
+            group by zcdid,endtime
+            ) group by zcdid order by endtime asc
+            ) t
+            left join tbl_ylws_jbxx t1
+            on t.zcdid=t1.id
+        </select>
+
+    <!-- 运输者首页点每条进去的列表根据接收次数（接收时间）分组  !注：接收情况和接收人已被运输者首页获取到的暂存点id过滤掉，此时不用加上jsqk='1' and qsrid=''-->
+    <select id="selectYSZindexDetailList" resultType="com.cd.zjyf.pojo.qr.YSZindexQR" parameterType="com.cd.zjyf.pojo.qc.YSZDetailQC" >
+            select fun_csdmc2(#{id}) as zcdmc,
+            sum(zl) as jszl,
+            endtime as jstime
+            from tbl_ylfw_jsdj
+            where zcdid = #{id}
+            and qsrid=#{qsrid}
+            and jsqk='1'
+            group by endtime
+            order by endtime desc
+        </select>
+
+
+
+    <!-- 管理者首页-->
+    <select id="selectGLZindex" resultType="com.cd.zjyf.pojo.qr.GLZindexQR" parameterType="string" >
+            select t.*,t1.dwmc  as zcdmc from (
+            select zcdid ,max(jstime) as zjjssj  from tbl_ylfw_jsdj where jsqk='1' and csdid
+            in (select t1.id from tbl_app_user t left join tbl_ylws_jbxx t1 on
+            t.JGDWID =t1.JGDWID where t.id=#{id} )
+            group by zcdid
+            order by zjjssj asc
+            ) t
+            left join tbl_ylws_jbxx t1
+            on t.zcdid=t1.id
+        </select>
+
+    <!-- 管理者首页及条件查询长期未接受（暂定超过3天算未接收） -->
+    <!--
+     <select id="selectGLZnocollect" resultType="com.cd.zjyf.pojo.qr.GLZdwnocollectQR" parameterType="com.cd.zjyf.pojo.qc.GLZdwnocollectQC" >
+     select fun_csdmc2(csdid) as dwmc,max(jstime) acceptTime from tbl_ylfw_jsdj
+     where zcdid in (
+     select id from tbl_ylws_jbxx  where DWDZBM like #{xzqh}||'%'
+      <if test="zcdid!=null and zcdid!=''">
+         and id=#{zcdid}
+     </if>
+     )
+     group by csdid
+     having
+     sysdate-max(jstime)>3
+      </select>-->
+    <select id="selectGLZnocollect" resultType="com.cd.zjyf.pojo.qr.GLZdwnocollectQR" parameterType="com.cd.zjyf.pojo.qc.GLZdwnocollectQC" >
+        select fun_csdmc2(csdid) as dwmc,max(jstime) acceptTime from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1 on t.csdid=t1.id
+        left join tbl_jgdw_jbxx t2 on t1.jgdwid=t2.id
+        where xzqh like #{xzqh}||'%'
+        and yyzt='0'
+        <if test="zcdid!=null and zcdid!=''">
+            and t.zcdid=#{zcdid}
+        </if>
+        group by csdid
+        having
+        sysdate-max(jstime)>3
+        order by acceptTime
+    </select>
+
+
+    <!-- 管理者查询的单位下拉 -->
+    <!--  <select id="getZcdlist" resultType="com.cd.zjyf.pojo.qr.GLZzcdlistQR" parameterType="string" >
+        select id,dwmc from tbl_ylws_jbxx where  DWDZBM like #{xzqh}||'%'  and yljgtype='1'
+     </select>-->
+    <select id="getZcdlist" resultType="com.cd.zjyf.pojo.qr.GLZzcdlistQR" parameterType="string" >
+            select id,dwmc from tbl_ylws_jbxx where  jgdwid in(select id from tbl_jgdw_jbxx where xzqh like #{xzqh}||'%' )  and yljgtype='1'
+        </select>
+
+
+
+    <!-- 管理者拒收列表 -->
+    <select id="selectGLZrefuseList" resultType="com.cd.zjyf.pojo.qr.GLZrefuseQR" parameterType="string" >
+
+            select t.*, t1.dwmc
+            from (select zcdid, jjly, id, endtime, zl, lx
+            from tbl_ylfw_jsdj
+            where jsqk = '2'
+            and csdid in (select t1.id from tbl_app_user t left join tbl_ylws_jbxx t1 on
+            t.JGDWID =t1.JGDWID where t.id=#{id})
+            ) t
+            left join tbl_ylws_jbxx t1
+            on t.zcdid = t1.id
+            order by endtime desc
+        </select>
+
+    <!-- 统计该暂存点下所有产生点分组的接收情况 (新增了一个qsrxm)-->
+    <select id="selectSummaryCSD" resultType="com.cd.zjyf.pojo.qr.SummaryByQRcodeQR" parameterType="com.cd.zjyf.pojo.qc.SJZSummaryQC" >
+            select fun_csdmc2(t.csdid) as csdmc,t.*,t1.*,t2.*,t3.*,t4.*,t5.* from(
+            select count(*) as jscs,csdid ,sum(jszl) jszl,sum(jssl) jssl ,fun_name(max(qsrid)) qsrxm from
+            (
+            select csdid,sum(zl) jszl,sum(sl) jssl,max(qsrid) qsrid  from tbl_ylfw_jsdj where zcdid=#{id} and jsqk=#{jsqk}  group by csdid,jstime
+            )
+            group by csdid
+            ) t
+            left join
+            (
+            select csdid,sum(zl) ssxfwzl,sum(sl) ssxfwsl   from tbl_ylfw_jsdj where zcdid=#{id} and jsqk=#{jsqk} and lx='01' group by csdid
+            ) t1
+            on t.csdid=t1.csdid
+            left join
+            (
+            select csdid,sum(zl) grxfwzl,sum(sl) grxfwsl   from tbl_ylfw_jsdj where zcdid=#{id} and jsqk=#{jsqk} and lx='02' group by csdid
+            ) t2
+            on t.csdid=t2.csdid
+            left join
+            (
+            select csdid,sum(zl) blxfwzl,sum(sl) blxfwsl   from tbl_ylfw_jsdj where zcdid=#{id} and jsqk=#{jsqk} and lx='03' group by csdid
+            ) t3
+            on t.csdid=t3.csdid
+            left join
+            (
+            select csdid,sum(zl) ywxfwzl,sum(sl) ywxfwsl   from tbl_ylfw_jsdj where zcdid=#{id} and jsqk=#{jsqk} and lx='04' group by csdid
+            ) t4
+            on t.csdid=t4.csdid
+            left join
+            (
+            select csdid,sum(zl) hxxfwzl,sum(sl) hxxfwsl   from tbl_ylfw_jsdj where zcdid=#{id} and jsqk=#{jsqk} and lx='05' group by csdid
+            ) t5
+            on t.csdid=t5.csdid
+
+        </select>
+
+    <!-- 统计该暂存点的接收情况 (有不唯一的情况左联？所以最好通过主键去左联)好吧，是我想太多了，其实以前的统计也是可以的，不用按时间排序的，因为每种类型都要扫一次-->
+    <select id="selectSummaryZCD" resultType="com.cd.zjyf.pojo.qr.SummaryByQRcodeQR" parameterType="string" >
+            select (select dwmc from tbl_ylws_jbxx where id=#{zcdid}) as zcdmc,t.jssl,t.*,t1.*,t2.*,t3.*,t4.*,t5.*,t6.* from(
+            select #{zcdid} as csdid,sum(zl) jszl,sum(sl) jssl  from tbl_ylfw_jsdj where zcdid=#{zcdid} and jsqk='0'
+            ) t
+            left join
+            (
+            select #{zcdid} as csdid,sum(zl) ssxfwzl,sum(sl) ssxfwsl   from tbl_ylfw_jsdj where zcdid=#{zcdid} and jsqk='0' and lx='01'
+            ) t1
+            on t.csdid=t1.csdid
+            left join
+            (
+            select #{zcdid} as csdid,sum(zl) grxfwzl,sum(sl) grxfwsl   from tbl_ylfw_jsdj where zcdid=#{zcdid} and jsqk='0' and lx='02'
+            ) t2
+            on t.csdid=t2.csdid
+            left join
+            (
+            select #{zcdid} as csdid,sum(zl) blxfwzl,sum(sl) blxfwsl   from tbl_ylfw_jsdj where zcdid=#{zcdid} and jsqk='0' and lx='03'
+            ) t3
+            on t.csdid=t3.csdid
+            left join
+            (
+            select #{zcdid} as csdid,sum(zl) ywxfwzl,sum(sl) ywxfwsl   from tbl_ylfw_jsdj where zcdid=#{zcdid} and jsqk='0' and lx='04'
+            ) t4
+            on t.csdid=t4.csdid
+            left join
+            (
+            select #{zcdid} as csdid,sum(zl) hxxfwzl,sum(sl) hxxfwsl   from tbl_ylfw_jsdj where zcdid=#{zcdid} and jsqk='0' and lx='05'
+            ) t5
+            on t.csdid=t5.csdid
+            left join
+            (
+            select #{zcdid} as csdid,sum(jscs) as jscs
+            from
+            (
+            select count(*) as jscs,csdid ,sum(jszl) jszl,sum(jssl) jssl from
+            (
+            select csdid,sum(zl) jszl,sum(sl) jssl  from tbl_ylfw_jsdj where zcdid=#{zcdid} and jsqk='0'  group by csdid,jstime
+            )
+            group by csdid
+            )
+            )t6 --这个是查产生点的接收总次数用的
+            on t.csdid=t6.csdid
+        </select>
+
+    <sql id="funRount">
+        <if test="bmjb=='1'">fun_tocity</if>
+        <if test="bmjb=='2'">fun_toarea</if>
+    </sql>
+
+    <!-- 管理者按市、按县、按街道统计合并（通过机构级别区分） -->
+    <select id="selectGLZstatistics" resultType="com.cd.zjyf.pojo.qr.GLZstatisticsQR" parameterType="com.cd.zjyf.pojo.qc.GLZstatisticsQC" >
+        select * from (
+        select <include refid="funRount"/>(xzqh) as xzqh, sum(zl) as zl
+        from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1
+        on t.zcdid = t1.id
+        left join tbl_jgdw_jbxx t2 on t1.jgdwid=t2.id
+        where xzqh like #{xzqh}||'%'
+        and t.jsqk = '1'
+        <if test="	endtimeBegin!=null and endtimeBegin!=''">
+            <![CDATA[and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')>=#{endtimeBegin} ]]>
+        </if>
+        <if test="	endtimeEnd!=null and endtimeEnd!=''">
+            <![CDATA[ and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')<= #{endtimeEnd} ]]>
+        </if>
+        group by <include refid="funRount"/>(xzqh)
+        ) t
+        left join tbl_areainfo t1 on t.xzqh = t1.code
+    </select>
+
+
+    <!--按市统计-->
+    <select id="selectGLZstatisticsForCity" resultType="com.cd.zjyf.pojo.qr.GLZstatisticsQR" parameterType="com.cd.zjyf.pojo.qc.GLZstatisticsQC" >
+        select * from (
+        select fun_tocity(DWDZBM) as xzqh,sum(zl)as zl from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx  t1 on t.csdid=t1.id
+        where DWDZBM like #{xzqh}||'%' and t.jsqk='1'
+        <if test="	endtimeBegin!=null and endtimeBegin!=''">
+            <![CDATA[and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')>=#{endtimeBegin} ]]>
+        </if>
+        <if test="	endtimeEnd!=null and endtimeEnd!=''">
+            <![CDATA[ and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')<= #{endtimeEnd} ]]>
+        </if>
+        group by fun_tocity(DWDZBM)
+        ) t
+        left join tbl_areainfo t1 on t.xzqh = t1.code
+    </select>
+
+    <!-- 管理者按县统计 -->
+    <select id="selectGLZstatisticsForArea" resultType="com.cd.zjyf.pojo.qr.GLZstatisticsQR" parameterType="com.cd.zjyf.pojo.qc.GLZstatisticsQC" >
+        select * from (
+        select fun_toarea(DWDZBM) as xzqh,sum(zl)as zl from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx  t1 on t.csdid=t1.id
+        where DWDZBM like #{xzqh}||'%' and t.jsqk='1'
+        <if test="	endtimeBegin!=null and endtimeBegin!=''">
+            <![CDATA[and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')>=#{endtimeBegin} ]]>
+        </if>
+        <if test="	endtimeEnd!=null and endtimeEnd!=''">
+            <![CDATA[ and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')<= #{endtimeEnd} ]]>
+        </if>
+        group by fun_toarea(DWDZBM)
+        ) t
+        left join tbl_areainfo t1 on t.xzqh = t1.code
+    </select>
+
+
+    <!-- 管理者按街道统计 -->
+    <select id="selectGLZstatisticsForXian" resultType="com.cd.zjyf.pojo.qr.GLZstatisticsQR" parameterType="com.cd.zjyf.pojo.qc.GLZstatisticsQC" >
+        select * from (
+        select DWDZBM as xzqh,sum(zl)as zl from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx  t1 on t.csdid=t1.id
+        where DWDZBM like #{xzqh}||'%' and t.jsqk='1'
+        <if test="	endtimeBegin!=null and endtimeBegin!=''">
+            <![CDATA[and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')>=#{endtimeBegin} ]]>
+        </if>
+        <if test="	endtimeEnd!=null and endtimeEnd!=''">
+            <![CDATA[ and To_char(endtime,'yyyy-mm-dd hh24:mi:ss')<= #{endtimeEnd} ]]>
+        </if>
+        group by DWDZBM
+        ) t
+        left join tbl_areainfo t1 on t.xzqh = t1.code
+    </select>
+
+
+    <select id="selectByPrimaryKeyHasYLJG" resultType="com.cd.zjyf.bean.AppUser" parameterType="java.lang.String" >
+            select
+            fun_csdmc(yljgid) as yljgmc,jgdwmc,
+            t.ID, YLJGID, XM, SJH, MM, RYLX, JGDWID, RYZP, ZGZT, ISSH, WTGYY,xzqh,fullname xzqhfn
+            from TBL_APP_USER t left join tbl_jgdw_jbxx t1
+            on t.jgdwid=t1.id
+            left join tbl_areainfo t2
+            on t1.xzqh=t2.code
+            where t.ID = #{id,jdbcType=VARCHAR}
+        </select>
+
+
+    <select id="selectUserQuerydata" resultType="com.cd.zjyf.pojo.qr.UserQueryDataQR" parameterType="com.cd.zjyf.pojo.qc.UserQuerydataQC" >
+        <if test="type==2">
+            select id,dwmc name from tbl_ylws_jbxx
+            where yljgtype='1'
+        </if>
+        <if test="type==4">
+            select id,jgdwmc name,xzqh from tbl_jgdw_jbxx
+        </if>
+    </select>
+
+
+    <select id="getAreaChildren" resultType="com.cd.zjyf.pojo.AreaTree"
+            parameterType="java.lang.String">
+            select * from tbl_areainfo where code like #{areacode}||'___________'
+        </select>
+
+    <select id="getArea" resultType="com.cd.zjyf.pojo.AreaTree"
+            parameterType="java.lang.String">
+            select * from tbl_areainfo where code =#{areacode}
+        </select>
+
+    <!--查出该管理者所在的行政区划  -->
+    <select id="selectGLZxzqh" resultType="com.cd.zjyf.bean.JgdwJbxx" parameterType="java.lang.String" >
+        select t1.* from tbl_app_user t left join tbl_jgdw_jbxx t1 on t.JGDWID = t1.id where t.id=#{id}
+    </select>
+
+
+
+    <select id="selectByTGZqueryByQRcode" resultType="com.cd.zjyf.pojo.qr.TGZqueryByQRcodeQR" parameterType="java.lang.String" >
+        select t.id, t.dwmc as ksmc, t2.dwmc
+        from tbl_ylws_jbxx t
+        left join tbl_ylws_jbxx t2
+        on t.zcdid = t2.id
+        where t.id = #{id}
+    </select>
+
+    <!-- 收集信息通过扫码显示录入信息通过提供者ID -->
+    <select id="selectBySJZqueryByQRcodeByTGZID" resultType="com.cd.zjyf.pojo.qr.SJZqueryByQRcodeQR" parameterType="java.lang.String" >
+        select t.id as csdid, t.dwmc as csdmc, t2.dwmc as zcdmc,t2.id as zcdid, t1.xm as tgzxm,t1.id as tgzid
+        from tbl_ylws_jbxx t
+        left join tbl_app_user t1
+        on t.id = t1.yljgid
+        left join tbl_ylws_jbxx t2
+        on t.zcdid = t2.id
+        where t1.id=#{id}
+    </select>
+
+
+    <!-- 收集信息通过扫码显示录入信息通过产生点ID -->
+    <select id="selectBySJZqueryByQRcodeByCSDID" resultType="com.cd.zjyf.pojo.qr.SJZqueryByQRcodeQR" parameterType="java.lang.String" >
+        select t.id as csdid,
+        t.dwmc as csdmc,
+        t2.dwmc as zcdmc,
+        t2.id as zcdid
+        from tbl_ylws_jbxx t
+        left join tbl_ylws_jbxx t2
+        on t.zcdid = t2.id
+        where t.id =#{id}
+    </select>
+
+
+    <!-- 查询产生点单位列表 -->
+    <select id="selectCSDdwList" resultType="com.cd.zjyf.bean.YlwsJbxx" parameterType="java.lang.String" >
+        select  dwmc,id from Tbl_Ylws_Jbxx where zcdid=
+        (
+        select t1.id from tbl_app_user t left join  Tbl_Ylws_Jbxx t1 on t.YLJGID = t1.id where t.id=#{id}
+        )
+    </select>
+
+</mapper>
+

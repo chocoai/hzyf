@@ -1,0 +1,45 @@
+FTP_ADDRESS: 192.168.22.163
+FTP_PASSWORD: 123456
+FTP_PORT: 21
+FTP_USERNAME: 1
+#logging:
+#    file: zjyl-web.log
+#    level:
+#        com:
+#            cd:
+#                zjyf:
+#                    controller: DEBUG
+#                    mapper: DEBUG
+mybatis:
+    config-location: classpath:mybatis/mybatis-config.xml
+    mapper-locations: classpath:mybatis/mapper/*.xml
+
+server:
+    port: 8096
+    tomcat:
+        uri-encoding: UTF-8
+spring:
+    datasource:
+        driverClassName: oracle.jdbc.OracleDriver
+        password: zj_ylws
+        url: jdbc:oracle:thin:@192.168.22.216:1521:orcl
+        username: zj_ylws
+    devtools:
+        restart:
+            enabled: false
+    mvc:
+        formcontent:
+            putfilter:
+                enabled: true
+    application:
+        name: zjyf-app
+    redis:
+        host: 192.168.22.221
+        port: 6379
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://192.168.22.223:7001/eureka/
+    instance:
+        instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+        prefer-ip-address: true

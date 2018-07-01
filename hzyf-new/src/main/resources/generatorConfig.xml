@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+		PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+		"http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<!-- 注：生成后xml文件要改两处：1.schema去掉。2.jdbctype=date去掉 -->
+<generatorConfiguration>
+
+	<properties resource="applicationConfig.properties" />
+
+	<context id="mysqlTables" targetRuntime="MyBatis3">
+		<!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+		<commentGenerator>
+			<property name="suppressAllComments" value="true" />
+		</commentGenerator>
+		
+		<jdbcConnection driverClass="${datasource.driverClassName}"
+						connectionURL="${datasource.url}" userId="${datasource.username}"
+						password="${datasource.password}" />
+<!--		<jdbcConnection driverClass="oracle.jdbc.OracleDriver"
+						connectionURL="jdbc:oracle:thin:@192.168.22.216:1521:orcl" userId="zj_ylws"
+						password="zj_ylws" />-->
+	<!--	<jdbcConnection driverClass="${datasource.driverClassName}"
+						connectionURL="${datasource.url}" userId="${datasource.username}"
+						password="${datasource.password}" />-->
+
+		<!-- 默认false，把JDBC DECIMAL 和 NUMERIC 类型解析为 Integer，为 true时把JDBC DECIMAL 
+			和 NUMERIC 类型解析为java.math.BigDecimal -->
+		<javaTypeResolver>
+			<property name="forceBigDecimals" value="false" />
+		</javaTypeResolver>
+
+		<!--&lt;!&ndash;自动生成的实体的存放包路径 &ndash;&gt;-->
+		<javaModelGenerator targetPackage="com.cd.zjyf.bean"
+			targetProject="src/main/java">
+			<property name="enableSubPackages" value="false" />
+			<property name="trimStrings" value="true" />
+		</javaModelGenerator>
+
+		<!--自动生成的*Mapper.xml文件存放路径 -->
+		<sqlMapGenerator targetPackage="mybatis.mysql"
+			targetProject="src/main/resources">
+			<property name="enableSubPackages" value="false" />
+		</sqlMapGenerator>
+
+		<!--&lt;!&ndash;自动生成的*Mapper.java存放路径 &ndash;&gt;-->
+		<javaClientGenerator type="XMLMAPPER"
+			targetPackage="com.cd.zjyf.mapper" targetProject="src/main/java">
+			<property name="enableSubPackages" value="false" />
+		</javaClientGenerator>
+
+
+		<table schema="zjphis" tableName="tbl_ylws_upload" domainObjectName="YlwsUpload">
+			<generatedKey column="ID" sqlStatement="select replace(uuid(), '-', '')"
+						  identity="false" />
+		</table>
+
+		<table schema="zjphis" tableName="tbl_ylws_file" domainObjectName="YlwsFile">
+			<generatedKey column="ID" sqlStatement="select replace(uuid(), '-', '')"
+						  identity="false" />
+		</table>
+
+	</context>
+
+</generatorConfiguration>

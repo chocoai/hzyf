@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.zjyf.mapper.YlwsJbxxMapper">
+  <resultMap id="BaseResultMap" type="com.cd.zjyf.bean.YlwsJbxx">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="shyxdm" jdbcType="VARCHAR" property="shyxdm" />
+    <result column="yljgtype" jdbcType="DECIMAL" property="yljgtype" />
+    <result column="dwmc" jdbcType="VARCHAR" property="dwmc" />
+    <result column="dwjc" jdbcType="VARCHAR" property="dwjc" />
+    <result column="dwdz" jdbcType="VARCHAR" property="dwdz" />
+    <result column="dwdzbm" jdbcType="VARCHAR" property="dwdzbm" />
+    <result column="zcdid" jdbcType="VARCHAR" property="zcdid" />
+    <result column="qrcode" jdbcType="VARCHAR" property="qrcode" />
+    <result column="yyzt" jdbcType="VARCHAR" property="yyzt" />
+    <result column="djrid" jdbcType="VARCHAR" property="djrid" />
+    <result column="djsj" jdbcType="TIMESTAMP" property="djsj" />
+    <result column="jgdwid" jdbcType="VARCHAR" property="jgdwid" />
+    <result column="isdelete" jdbcType="VARCHAR" property="isdelete" />
+    <result column="is_sewage" jdbcType="VARCHAR" property="isSewage" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, shyxdm, yljgtype, dwmc, dwjc, dwdz, dwdzbm, zcdid, qrcode, yyzt, djrid, djsj, 
+    jgdwid, isdelete, is_sewage
+  </sql>
+  <select id="selectByExample" parameterType="com.cd.zjyf.bean.YlwsJbxxExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from tbl_ylws_jbxx
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from tbl_ylws_jbxx
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from tbl_ylws_jbxx
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.cd.zjyf.bean.YlwsJbxxExample">
+    delete from tbl_ylws_jbxx
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.cd.zjyf.bean.YlwsJbxx">
+    <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.String">
+      select replace(uuid(), '-', '')
+    </selectKey>
+    insert into tbl_ylws_jbxx (id, shyxdm, yljgtype, 
+      dwmc, dwjc, dwdz, dwdzbm, 
+      zcdid, qrcode, yyzt, 
+      djrid, djsj, jgdwid, 
+      isdelete, is_sewage)
+    values (#{id,jdbcType=VARCHAR}, #{shyxdm,jdbcType=VARCHAR}, #{yljgtype,jdbcType=DECIMAL}, 
+      #{dwmc,jdbcType=VARCHAR}, #{dwjc,jdbcType=VARCHAR}, #{dwdz,jdbcType=VARCHAR}, #{dwdzbm,jdbcType=VARCHAR}, 
+      #{zcdid,jdbcType=VARCHAR}, #{qrcode,jdbcType=VARCHAR}, #{yyzt,jdbcType=VARCHAR}, 
+      #{djrid,jdbcType=VARCHAR}, #{djsj,jdbcType=TIMESTAMP}, #{jgdwid,jdbcType=VARCHAR}, 
+      #{isdelete,jdbcType=VARCHAR}, #{isSewage,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cd.zjyf.bean.YlwsJbxx">
+    <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.String">
+      select replace(uuid(), '-', '')
+    </selectKey>
+    insert into tbl_ylws_jbxx
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      id,
+      <if test="shyxdm != null">
+        shyxdm,
+      </if>
+      <if test="yljgtype != null">
+        yljgtype,
+      </if>
+      <if test="dwmc != null">
+        dwmc,
+      </if>
+      <if test="dwjc != null">
+        dwjc,
+      </if>
+      <if test="dwdz != null">
+        dwdz,
+      </if>
+      <if test="dwdzbm != null">
+        dwdzbm,
+      </if>
+      <if test="zcdid != null">
+        zcdid,
+      </if>
+      <if test="qrcode != null">
+        qrcode,
+      </if>
+      <if test="yyzt != null">
+        yyzt,
+      </if>
+      <if test="djrid != null">
+        djrid,
+      </if>
+      <if test="djsj != null">
+        djsj,
+      </if>
+      <if test="jgdwid != null">
+        jgdwid,
+      </if>
+      <if test="isdelete != null">
+        isdelete,
+      </if>
+      <if test="isSewage != null">
+        is_sewage,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      #{id,jdbcType=VARCHAR},
+      <if test="shyxdm != null">
+        #{shyxdm,jdbcType=VARCHAR},
+      </if>
+      <if test="yljgtype != null">
+        #{yljgtype,jdbcType=DECIMAL},
+      </if>
+      <if test="dwmc != null">
+        #{dwmc,jdbcType=VARCHAR},
+      </if>
+      <if test="dwjc != null">
+        #{dwjc,jdbcType=VARCHAR},
+      </if>
+      <if test="dwdz != null">
+        #{dwdz,jdbcType=VARCHAR},
+      </if>
+      <if test="dwdzbm != null">
+        #{dwdzbm,jdbcType=VARCHAR},
+      </if>
+      <if test="zcdid != null">
+        #{zcdid,jdbcType=VARCHAR},
+      </if>
+      <if test="qrcode != null">
+        #{qrcode,jdbcType=VARCHAR},
+      </if>
+      <if test="yyzt != null">
+        #{yyzt,jdbcType=VARCHAR},
+      </if>
+      <if test="djrid != null">
+        #{djrid,jdbcType=VARCHAR},
+      </if>
+      <if test="djsj != null">
+        #{djsj,jdbcType=TIMESTAMP},
+      </if>
+      <if test="jgdwid != null">
+        #{jgdwid,jdbcType=VARCHAR},
+      </if>
+      <if test="isdelete != null">
+        #{isdelete,jdbcType=VARCHAR},
+      </if>
+      <if test="isSewage != null">
+        #{isSewage,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.cd.zjyf.bean.YlwsJbxxExample" resultType="java.lang.Long">
+    select count(*) from tbl_ylws_jbxx
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update tbl_ylws_jbxx
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=VARCHAR},
+      </if>
+      <if test="record.shyxdm != null">
+        shyxdm = #{record.shyxdm,jdbcType=VARCHAR},
+      </if>
+      <if test="record.yljgtype != null">
+        yljgtype = #{record.yljgtype,jdbcType=DECIMAL},
+      </if>
+      <if test="record.dwmc != null">
+        dwmc = #{record.dwmc,jdbcType=VARCHAR},
+      </if>
+      <if test="record.dwjc != null">
+        dwjc = #{record.dwjc,jdbcType=VARCHAR},
+      </if>
+      <if test="record.dwdz != null">
+        dwdz = #{record.dwdz,jdbcType=VARCHAR},
+      </if>
+      <if test="record.dwdzbm != null">
+        dwdzbm = #{record.dwdzbm,jdbcType=VARCHAR},
+      </if>
+      <if test="record.zcdid != null">
+        zcdid = #{record.zcdid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.qrcode != null">
+        qrcode = #{record.qrcode,jdbcType=VARCHAR},
+      </if>
+      <if test="record.yyzt != null">
+        yyzt = #{record.yyzt,jdbcType=VARCHAR},
+      </if>
+      <if test="record.djrid != null">
+        djrid = #{record.djrid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.djsj != null">
+        djsj = #{record.djsj,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.jgdwid != null">
+        jgdwid = #{record.jgdwid,jdbcType=VARCHAR},
+      </if>
+      <if test="record.isdelete != null">
+        isdelete = #{record.isdelete,jdbcType=VARCHAR},
+      </if>
+      <if test="record.isSewage != null">
+        is_sewage = #{record.isSewage,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update tbl_ylws_jbxx
+    set id = #{record.id,jdbcType=VARCHAR},
+      shyxdm = #{record.shyxdm,jdbcType=VARCHAR},
+      yljgtype = #{record.yljgtype,jdbcType=DECIMAL},
+      dwmc = #{record.dwmc,jdbcType=VARCHAR},
+      dwjc = #{record.dwjc,jdbcType=VARCHAR},
+      dwdz = #{record.dwdz,jdbcType=VARCHAR},
+      dwdzbm = #{record.dwdzbm,jdbcType=VARCHAR},
+      zcdid = #{record.zcdid,jdbcType=VARCHAR},
+      qrcode = #{record.qrcode,jdbcType=VARCHAR},
+      yyzt = #{record.yyzt,jdbcType=VARCHAR},
+      djrid = #{record.djrid,jdbcType=VARCHAR},
+      djsj = #{record.djsj,jdbcType=TIMESTAMP},
+      jgdwid = #{record.jgdwid,jdbcType=VARCHAR},
+      isdelete = #{record.isdelete,jdbcType=VARCHAR},
+      is_sewage = #{record.isSewage,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cd.zjyf.bean.YlwsJbxx">
+    update tbl_ylws_jbxx
+    <set>
+      <if test="shyxdm != null">
+        shyxdm = #{shyxdm,jdbcType=VARCHAR},
+      </if>
+      <if test="yljgtype != null">
+        yljgtype = #{yljgtype,jdbcType=DECIMAL},
+      </if>
+      <if test="dwmc != null">
+        dwmc = #{dwmc,jdbcType=VARCHAR},
+      </if>
+      <if test="dwjc != null">
+        dwjc = #{dwjc,jdbcType=VARCHAR},
+      </if>
+      <if test="dwdz != null">
+        dwdz = #{dwdz,jdbcType=VARCHAR},
+      </if>
+      <if test="dwdzbm != null">
+        dwdzbm = #{dwdzbm,jdbcType=VARCHAR},
+      </if>
+      <if test="zcdid != null">
+        zcdid = #{zcdid,jdbcType=VARCHAR},
+      </if>
+      <if test="qrcode != null">
+        qrcode = #{qrcode,jdbcType=VARCHAR},
+      </if>
+      <if test="yyzt != null">
+        yyzt = #{yyzt,jdbcType=VARCHAR},
+      </if>
+      <if test="djrid != null">
+        djrid = #{djrid,jdbcType=VARCHAR},
+      </if>
+      <if test="djsj != null">
+        djsj = #{djsj,jdbcType=TIMESTAMP},
+      </if>
+      <if test="jgdwid != null">
+        jgdwid = #{jgdwid,jdbcType=VARCHAR},
+      </if>
+      <if test="isdelete != null">
+        isdelete = #{isdelete,jdbcType=VARCHAR},
+      </if>
+      <if test="isSewage != null">
+        is_sewage = #{isSewage,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cd.zjyf.bean.YlwsJbxx">
+    update tbl_ylws_jbxx
+    set shyxdm = #{shyxdm,jdbcType=VARCHAR},
+      yljgtype = #{yljgtype,jdbcType=DECIMAL},
+      dwmc = #{dwmc,jdbcType=VARCHAR},
+      dwjc = #{dwjc,jdbcType=VARCHAR},
+      dwdz = #{dwdz,jdbcType=VARCHAR},
+      dwdzbm = #{dwdzbm,jdbcType=VARCHAR},
+      zcdid = #{zcdid,jdbcType=VARCHAR},
+      qrcode = #{qrcode,jdbcType=VARCHAR},
+      yyzt = #{yyzt,jdbcType=VARCHAR},
+      djrid = #{djrid,jdbcType=VARCHAR},
+      djsj = #{djsj,jdbcType=TIMESTAMP},
+      jgdwid = #{jgdwid,jdbcType=VARCHAR},
+      isdelete = #{isdelete,jdbcType=VARCHAR},
+      is_sewage = #{isSewage,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

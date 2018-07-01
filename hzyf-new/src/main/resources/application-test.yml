@@ -1,0 +1,54 @@
+FTP_ADDRESS: 192.168.22.223
+FTP_PORT: 21
+FTP_USERNAME: vsftpd
+FTP_PASSWORD: 1
+
+#FTP人员照片存放路径，nginx服务器地址
+FTP:
+      RYZP_PATH : ryzp/
+      SEWAGE_PATH : sewage/
+      NGINX_SERVER_ADDR : https://dev.zjcdjk.cn/
+
+
+#logging:
+#    file: zjyl-web.log
+#    level:
+#        com:
+#            cd:
+#                zjyf:
+#                    controller: DEBUG
+#                    mapper: DEBUG
+mybatis:
+    config-location: classpath:mybatis/mybatis-config.xml
+    mapper-locations: classpath:mybatis/mysql/*.xml
+
+server:
+    port: 8288
+    tomcat:
+        uri-encoding: UTF-8
+spring:
+    datasource:
+        driverClassName: com.mysql.jdbc.Driver
+        url: jdbc:mysql://192.168.22.227/hzyf-test?characterEncoding=utf-8
+        password: zjyf-test
+        username: zjyf-test
+    devtools:
+        restart:
+            enabled: false
+    mvc:
+        formcontent:
+            putfilter:
+                enabled: true
+    application:
+        name: hzyf-new-test
+#        name: zjyf-web
+    redis:
+        host: 192.168.22.221
+        port: 6379
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://192.168.22.223:7001/eureka/
+    instance:
+        instance-id: ${spring.cloud.client.ipAddress}:${server.port}
+        prefer-ip-address: true

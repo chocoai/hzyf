@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.zjyf.mapper.ScreenMapper" >
+    <!--目前先改了一些死条件，group by 的条件暂时没改-->
+
+
+    <!-- 注意：这里的收集时间全部是jstime（清算时间）而不是endtime接收时间）,其实都一样的，因为有条件jsqk='1' -->
+    <!-- 暂存点 带有条件jsqk='1'，产生点不带条件-->
+
+    <!--车辆轨迹回放查询-->
+    <select id="carLocationPlayback" resultType="com.cd.zjyf.pojo.qr.CarLocation">
+        SELECT *  FROM TBL_CARLOCATION where
+         TO_DAYS(CREATE_time)=TO_DAYS(#{createTime})
+         and devicename=#{devicename}
+         order by CREATE_time
+    </select>
+
+
+
+    <!--根据level不同选择不同的方法-->
+    <sql id="getFunByLevel">
+        <if test="level==1">
+            fun_tocity
+        </if>
+        <if test="level==2">
+            fun_toarea
+        </if>
+    </sql>
+      <sql id="getFunByLevel2">
+    </sql>
+
+
+
+
+    <!-- 辖区本月废物收集情况按地区统计(已改) -->
+    <select id="listYFZLByOneMonth" resultType="com.cd.zjyf.pojo.qr.OneMonthSJ" >
+        select IFNULL(csCount,0) csCount,IFNULL(zlCount,0) zlCount,code as regionCode,name as regionName
+        from (
+        select  count(*)as csCount,sum(zlCount) as zlCount,<include refid="getFunByLevel"/>(xzqh) as regionCode from (
+        select  sum(zl)as zlCount,xzqh
+        from tbl_ylfw_jsdj t
+        left join tbl_ylws_jbxx t1
+        on t.csdid = t1.id
+        left join tbl_jgdw_jbxx t2
+        on t1.jgdwid=t2.id
+        where  jsqk = '1'
+        and DATE_FORMAT( endtime, '%Y%m' ) = DATE_FORMAT( CURDATE() ,'%Y%m' )
+        and xzqh like CONCAT(#{regionCode},'%')
+        group by xzqh,endtime
+        )  temp group by <include refid="getFunByLevel"/>(xzqh)
+        ) t
+        right join tbl_areainfo t1
+        on t.regionCode = t1.code
+        where code like CONCAT(#{regionCode},'_%')
+        and code= <include refid="getFunByLevel"/>(code)
+    </select>
+
+
+
+
+
+
+    <!-- 本区域本月废物收集情况按类型统计(已改) -->
+    <select id="listYFZLByOne" resultType="com.cd.zjyf.pojo.qr.LX" >
+select t1.lxcode,t.count from
+(
+     select sum(zl) as count, IFNULL(lx,'06') as lxCode
+   from tbl_ylfw_jsdj t
+   left join tbl_ylws_jbxx t1
+     on t.zcdid = t1.id
+     left join tbl_jgdw_jbxx t2
+     on t1.jgdwid=t2.id
+  where jsqk = '1'
+    and DATE_FORMAT( endtime, '%Y%m' ) = DATE_FORMAT( CURDATE() ,'%Y%m' )
+    and xzqh like CONCAT(#{regionCode},'%')
+    group by lx with ROLLUP
+) t
+right join
+(
+ select '01' as lxcode  
+ union all
+ select '02' as lxcode  
+ union all
+  select '03' as lxcode  
+ union all
+  select '04' as lxcode  
+ union all
+  select '05' as lxcode  
+   union all
+  select '06' as lxcode  
+)
+t1
+on t.lxcode=t1.lxcode
+order by t1.lxcode
+</select>
+
+
+
+
+
+    <!--地理信息获取（已改） -->
+    <select id="listDLXX" resultType="com.cd.zjyf.pojo.qr.DLXX" >
+        select * from
+        (
+
+        select null ryzp,dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+        (
+        select '2' as zdType, csdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,csdid) in
+        (
+        select max(jstime) lastTime,csdid from tbl_ylfw_jsdj
+        where zcdid in (<include refid="dwIn"/>)
+        group by csdid
+        )
+        ) t
+        left join tbl_ylws_jbxx t1 on t.id =t1.id
+        left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+        where t1.yljgtype='3'
+
+        union all
+
+        select null ryzp,dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+        (
+        select '1' as zdType, zcdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,zcdid) in
+        (
+        select max(jstime) lastTime,zcdid from tbl_ylfw_jsdj
+        where zcdid in (<include refid="dwIn"/>) and jsqk='1'
+        group by zcdid
+        )
+        ) t
+        left join tbl_ylws_jbxx t1 on t.id =t1.id
+        left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+        union all
+
+        select t1.ryzp,t1.xm as dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+        (
+        select '3' as zdType, jsrid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,jsrid) in
+        (
+        select max(jstime) lastTime,jsrid from tbl_ylfw_jsdj
+        where jsrid in (
+        select t.id from tbl_app_user t
+        left join tbl_ylws_jbxx t1
+        on t.yljgid = t1.id
+        left join tbl_jgdw_jbxx t2
+        on t1.jgdwid=t2.id
+        where  ZGZT='1'
+        and rylx='2'
+        and xzqh like CONCAT(#{regionCode},'%')
+        )
+        group by jsrid
+        )
+        ) t
+        left join tbl_app_user t1 on t.id =t1.id
+        left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+        ) temp where zdType in
+        <foreach collection="zdTypes" item="zdType" index="index"
+                 open="(" close=")" separator=",">
+            #{zdType}
+        </foreach>
+
+    </select>
+
+
+    <!-- 单位列表信息获取（已改）-->
+    <select id="listDWinfo" resultType="com.cd.zjyf.pojo.qr.DLXX" >
+        select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType,t1.zcdid from
+        (
+        select '2' as zdType, csdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,csdid) in
+        (
+        select max(jstime) lastTime,csdid from tbl_ylfw_jsdj
+        where zcdid in (<include refid="dwIn"/>)
+        group by csdid
+        )
+        ) t
+        left join tbl_ylws_jbxx t1 on t.id =t1.id
+        left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+        where t1.yljgtype='3'
+
+        union all
+
+        select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType,t1.zcdid from
+        (
+        select '1' as zdType, zcdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,zcdid) in
+        (
+        select max(jstime) lastTime,zcdid from tbl_ylfw_jsdj
+        where zcdid in (<include refid="dwIn"/>) and jsqk='1'
+        group by zcdid
+        )
+        ) t
+        left join tbl_ylws_jbxx t1 on t.id =t1.id
+        left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+    </select>
+
+    <!-- 暂存点列表信息获取-->
+    <select id="listZCD" resultType="com.cd.zjyf.pojo.qr.DLXX" >
+
+
+        select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+        (
+        select '1' as zdType, zcdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,zcdid) in
+        (
+        select max(jstime) lastTime,zcdid from tbl_ylfw_jsdj
+        where zcdid in (<include refid="dwIn"/>) and jsqk='1'
+        group by zcdid
+        )
+        ) t
+        left join tbl_ylws_jbxx t1 on t.id =t1.id
+        left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+
+    </select>
+
+
+    <!--诊所列表信息获取-->
+    <!--where zcdid in (<include refid="dwIn"/>)-->
+    <select id="listZC" resultType="com.cd.zjyf.pojo.qr.DLXX" >
+        select dwmc,t.id,longitude,latitude,lastTime,lastZl,zdType from
+        (
+        select '2' as zdType, csdid as id,jstime as lastTime,zl as lastZl from tbl_ylfw_jsdj where (jstime,csdid) in
+        (
+        select max(jstime) lastTime,csdid from tbl_ylfw_jsdj
+
+        group by csdid
+        )
+        ) t
+        left join tbl_ylws_jbxx t1 on t.id =t1.id
+        left join tbl_ylws_dlxx t2 on t.id = t2.fkid
+        where t1.yljgtype='3' and t1.zcdid=#{id}
+
+    </select>
+
+
+
+    <!-- 长期未收集单位列表 -->
+    <select id="listDWnocollect" resultType="com.cd.zjyf.pojo.qr.DWnocollect" >
+        select fun_csdmc2(csdid) as dwmc,max(jstime) acceptTime from tbl_ylfw_jsdj
+        where csdid in (<include refid="dwIn"/>)
+        group by csdid
+        having
+        DATEDIFF(now(),max(jstime))>${sqlSegment}
+        order by acceptTime
+    </select>
+
+    <!-- 医废视频监控查看 -->
+    <select id="lookSP" resultType="com.cd.zjyf.pojo.qr.DWcount" >
+    </select>
+
+
+    <select id="preListDWsjqk" resultType="string" >
+	select yljgtype from tbl_ylws_jbxx where id=#{id}
+</select>
+
+
+
+    <!-- 具体单位收集情况2 -->
+    <!--接收时间 是否清算 类别 重量 交接人 收集人 运输人  -->
+    <select id="listDWsjqk2" resultType="com.cd.zjyf.pojo.qr.SJQK2" >
+select jstime,jsqk,lx,zl,fun_name(tgzid) tgz,fun_name(jsrid) jsr,fun_name(qsrid) qsr from tbl_ylfw_jsdj
+ where  ${sqlSegment} =#{id}
+order by jsqk,jstime desc
+</select>
+
+
+    <!-- 查配置表 -->
+    <select id="selectConfig"  resultType="string" >
+	select value from TBL_YLWS_CONFIG where name=#{name}
+</select>
+
+    <!-- 地区下拉 -->
+<!--    <select id="areaDropdown" resultType="com.cd.zjyf.pojo.qr.AreaDropdown" >
+select * from tbl_areainfo
+where code in
+(
+select ${sqlFun2}  from tbl_areainfo
+where ${sqlFun2} like CONCAT(#{regionCode},'%')
+group by ${sqlFun2}
+)
+</select>-->
+    <select id="areaDropdown" resultType="com.cd.zjyf.pojo.qr.AreaDropdown" >
+    SELECT
+         *
+    FROM
+        tbl_areainfo
+    where fun_toarea (CODE)  LIKE CONCAT(#{regionCode},'%')
+    </select>
+
+
+    <!--地区年总收集重量（清算时间）（已改）  -->
+    <select id="yearTotalZL" resultType="string" >
+        select
+        IFNULL(sum(zl),0.00) a
+        from tbl_ylfw_jsdj where YEAR(endtime) =YEAR(now())
+        and zcdid in ( <include refid="dwIn"/>)
+    </select>
+
+    <!--16年开始近5年的垃圾收集情况和单位数量(清算时间)（已改）  -->
+    <select id="qst" resultType="com.cd.zjyf.pojo.qr.QST" >
+        select * from(
+        select date_format(DATE_ADD(now(),interval 0 year),'%Y') as year
+        union all
+        select date_format(DATE_ADD(now(),interval -1 year),'%Y') as year
+        union all
+        select date_format(DATE_ADD(now(),interval -2 year),'%Y') as year
+        union all
+        select date_format(DATE_ADD(now(),interval -3 year),'%Y') as year
+        union all
+        select date_format(DATE_ADD(now(),interval -4 year),'%Y') as year
+        ) t
+        left join
+        (
+        select year(endtime) year,round(sum(zl)/1000,2) zl,count(distinct(csdid))+count(distinct(zcdid)) jgs from
+        (
+        select * from tbl_ylfw_jsdj where zcdid in (<include refid="dwIn"/>)
+        ) temp
+        group by year(endtime)
+        ) t1
+        on t.year=t1.year
+        where t.year>=2016
+    </select>
+
+    <!-- 实际接收情况(按接收时间降序)（已改）-->
+    <!--收集人 接收人 接收单位 接收时间 -->
+    <!--效率太低了，舍弃-->
+    <select id="sjjsqk" resultType="com.cd.zjyf.pojo.qr.SJSJQK" >
+        select distinct  (select dwmc  from tbl_ylws_jbxx where id=t.zcdid) zcd,(select dwjc  from tbl_ylws_jbxx where id=t.csdid) csd,jstime,fun_name(tgzid) tgz,fun_name(jsrid) jsr,fun_name(qsrid) qsr  from   tbl_ylfw_jsdj  t where (csdid,jstime) in
+        (
+        select  csdid,MAX(jstime) from tbl_ylfw_jsdj
+        where zcdid in  ( <include refid="dwIn"/>)
+        group by csdid
+
+        )
+        order by jstime desc
+    </select>
+
+
+
+    <!--产生点列表（已改） -->
+    <select id="csdList" resultType="com.cd.zjyf.pojo.qr.CSDlist" >
+select t.id as id,t.dwmc dwmc,t1.name name from tbl_ylws_jbxx t
+        left join tbl_jgdw_jbxx t2 on t.jgdwid=t2.id
+        left join tbl_areainfo t1 on t2.xzqh=t1.code
+        where
+        yljgtype!='1'
+  <if test="regionCode!=''">
+    and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like  CONCAT(#{regionCode},'%') )
+  </if>
+        AND (isdelete != '1' OR isdelete IS NULL)
+</select>
+
+    <!--暂存点列表（已改） -->
+    <select id="zcdList" resultType="com.cd.zjyf.pojo.qr.ZCDlist" >
+select t.id yljgid,t.dwmc dwmc,t1.zl zl,t3.name name,t4.indexCode indexCode from tbl_ylws_jbxx t left join
+(
+select zcdid,sum(zl) zl from tbl_ylfw_jsdj where jsqk!='1'
+group by  zcdid
+) t1
+on t.id =t1.zcdid
+left join tbl_jgdw_jbxx t2
+on t.jgdwid=t2.id
+left join tbl_areainfo t3
+on t2.xzqh=t3.code
+ left join TBL_YLWS_HKDevice t4
+  on t.id = t4.yljgid
+where yljgtype='1'
+<if test="regionCode!=''">
+    and jgdwid in(select id from tbl_jgdw_jbxx where xzqh like  CONCAT(#{regionCode},'%') )
+</if>
+        AND (isdelete != '1' OR isdelete IS NULL)
+</select>
+
+
+    <!-- 车辆定位（临时方法，以后要对接，地区参数暂时无视） -->
+    <select id="carLocation" resultType="com.cd.zjyf.pojo.qr.CarLocation" >
+	select * from tbl_app_user t
+	left join tbl_ylws_dlxx t1
+	on t.id =t1.fkid
+	where rylx='3'
+</select>
+
+    <!--今年收集各地区重量（已改）  -->
+    <select id="areaZL" resultType="com.cd.zjyf.pojo.qr.AreaZL" >
+select * from
+(
+select * from tbl_areainfo
+where code like CONCAT(#{regionCode},'_%')
+and code=fun_toarea(code)
+ )t
+left join
+(
+select (xzqh) xzqh,sum(zl) zl from tbl_ylfw_jsdj t
+ left join tbl_ylws_jbxx t1
+ on t.zcdid=t1.id
+ left join tbl_jgdw_jbxx t2
+ on t1.jgdwid=t2.id
+where YEAR (endtime) = YEAR(now())
+and t2.xzqh like CONCAT(#{regionCode},'%')
+group by (xzqh)
+) t1
+on t.code= t1.xzqh
+</select>
+
+    <!--智能监管  -->
+    <select id="znjg" resultType="com.cd.zjyf.pojo.qr.ZNJG" >
+        select * from
+        (<include refid="csd"></include>) t,
+        (<include refid="zcd"></include>) t1,
+        (<include refid="zl"></include>) t2,
+        (<include refid="car"></include>) t3
+    </select>
+    <!--产生点个数(已改)-->
+    <sql id="csd">
+	select count(*) csd from tbl_ylws_jbxx
+where jgdwid in(select id from tbl_jgdw_jbxx where xzqh like CONCAT(#{regionCode},'%') )
+and yljgtype!='1'
+  AND (isdelete != '1' OR isdelete IS NULL)
+</sql>
+    <!--暂存点现有重量（已改）  -->
+    <sql id="zcd">
+        select round(sum(zl)/1000,2) zcd from tbl_ylfw_jsdj where jsqk!='1'
+        and zcdid in (
+        <include refid="dwIn"/>
+        )
+    </sql>
+    <!--无害处置重量（已改）  -->
+    <sql id="zl">
+        select round(sum(zl)/1000,2) zl from tbl_ylfw_jsdj where YEAR (endtime) = YEAR(now())
+        and zcdid in (
+        <include refid="dwIn"/>
+        )
+    </sql>
+    <!--运输车辆数 -->
+    <sql id="car">
+	select count(*) car from tbl_app_user where rylx='3'
+</sql>
+    <!--noChange-->
+    <sql id="dwIn">
+    select t.id  from tbl_ylws_jbxx t left join tbl_jgdw_jbxx t1
+                                 on t.jgdwid= t1.id
+                                 where t1.xzqh like CONCAT(#{regionCode},'%')
+                                 and YYZT='0'
+    </sql>
+
+
+
+	<!-- 根据医疗机构id查询海康设备 -->
+    <!--noChange-->
+	<select id="queryHKDevice" parameterType="string" resultType="string">
+			select INDEXCODE from TBL_YLWS_HKDevice where  yljgid=#{id}
+	</select>
+
+</mapper>
